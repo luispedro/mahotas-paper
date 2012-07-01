@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{python}
+\usepackage[%
+    natbib=true,%
+    backend=biber,%
+    backref=true,%
+    citestyle=authoryear-comp,%
+    bibstyle=authoryear,%
+    maxbibnames=24,%
+    maxcitenames=2,%
+]{biblatex}
+
+\hypersetup{%
+    bookmarks=true,
+    colorlinks=true,
+    pdfauthor={Luis Pedro Coelho},
+    citecolor=pondgreen,
+    urlcolor=toastedchilipowder,
+    linkcolor=toastedchilipowder,
+}
+\let\code\texttt
+\addbibresource{references.bib}
+
+\title{Mahotas: Open source software for scriptable computer vision}
+\author{Luis Pedro Coelho}
+
+\begin{document}
+\maketitle
+
+\section*{Abstract}
+\section{Introduction}
+\printbibliography
+\end{document}

@@ -1,0 +1,93 @@
+\usepackage{listings}
+\usepackage{textcomp}
+\usepackage{setspace}
+\usepackage{palatino}
+
+\definecolor{bronzetan}{HTML}{BD3600}
+\definecolor{smokered}{HTML}{D95550}
+\definecolor{overcome}{HTML}{F89B0F}
+\definecolor{pondgreen}{HTML}{647704}
+\definecolor{crystalgreen}{HTML}{90a905}
+\definecolor{toastedchilipowder}{HTML}{430a01}
+\definecolor{purplepumpkin}{HTML}{6d2243}
+\definecolor{circus392}{HTML}{FFDC68}
+
+\renewcommand{\lstlistlistingname}{Code Listings}
+\renewcommand{\lstlistingname}{Code Listing}
+\definecolor{gray}{gray}{0.5}
+
+\lstnewenvironment{python}[1][]{%
+\lstset{%
+language=python,
+basicstyle=\ttfamily\small,%\setstretch{1},
+stringstyle=\color{toastedchilipowder},
+showstringspaces=false,
+alsoletter={1234567890},
+otherkeywords={\ , \}, \{},
+keywordstyle=\color{overcome},
+emph={access,and,break,class,continue,def,del,elif,else,%
+except,exec,finally,for,from,global,if,import,in,is,%
+lambda,not,or,pass,print,raise,return,try,while},
+emphstyle=\color{pondgreen}\bfseries,
+emph={[2]True, False, None, self},
+emphstyle=[2]\color{pondgreen},
+emph={[3]from, import, as},
+emphstyle=[3]\color{overcome},
+upquote=true,
+morecomment=[s]{"""}{"""},
+commentstyle=\color{gray}\slshape,
+emph={[4]1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
+emphstyle=[4]\color{toastedchilipowder},
+literate=*%
+        {:}{{\textcolor{overcome}:}}{1}%
+        {=}{{\textcolor{overcome}=}}{1}%
+        {-}{{\textcolor{overcome}-}}{1}%
+        {+}{{\textcolor{overcome}+}}{1}%
+        {/}{{\textcolor{overcome}/}}{1}%
+        {*}{{\textcolor{overcome}*}}{1}%
+        {!}{{\textcolor{overcome}!}}{1}%
+        {(}{{\textcolor{overcome}(}}{1}%
+        {)}{{\textcolor{overcome})}}{1}%
+        {[}{{\textcolor{overcome}[}}{1}%
+        {]}{{\textcolor{overcome}]}}{1}%
+        {<}{{\textcolor{overcome}<}}{1}%
+        {>}{{\textcolor{overcome}>}}{1},%
+framexleftmargin=1em, framextopmargin=1mm, frame=leftline,#1
+}}{}
+
+\lstnewenvironment{cplusplus}[1][]{%
+\lstset{%
+language=C++,
+keywordstyle=\color{pondgreen}\bfseries,
+alsoletter={1234567890},
+commentstyle=\color{gray}\slshape,
+stringstyle=\color{toastedchilipowder},
+showstringspaces=false,
+basicstyle=\ttfamily\small,%\setstretch{1},
+%numberstyle=\footnotesize,
+%numbers=left,
+%stepnumber=1,
+%numbersep=10pt,
+%tabsize=2,
+%breaklines=true,
+%prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+%breakatwhitespace=true,
+%extendedchars=true,
+literate=*%
+        {:}{{\textcolor{overcome}:}}{1}%
+        {=}{{\textcolor{overcome}=}}{1}%
+        {-}{{\textcolor{overcome}-}}{1}%
+        {+}{{\textcolor{overcome}+}}{1}%
+        {/}{{\textcolor{overcome}/}}{1}%
+        {*}{{\textcolor{overcome}*}}{1}%
+        {!}{{\textcolor{overcome}!}}{1}%
+        {(}{{\textcolor{overcome}(}}{1}%
+        {)}{{\textcolor{overcome})}}{1}%
+        {[}{{\textcolor{overcome}[}}{1}%
+        {]}{{\textcolor{overcome}]}}{1}%
+        {<}{{\textcolor{overcome}<}}{1}%
+        {>}{{\textcolor{overcome}>}}{1},%
+framexleftmargin=1em, framextopmargin=1mm, frame=leftline,#1
+}}{}
+
+
