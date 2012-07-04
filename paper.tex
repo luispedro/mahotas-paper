@@ -20,6 +20,7 @@
     urlcolor=toastedchilipowder,
     linkcolor=toastedchilipowder,
 }
+\newcommand*{\cpp}{{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny\textbf{++}}}}
 \let\code\texttt
 \addbibresource{references.bib}
 
@@ -31,5 +32,190 @@
 
 \section*{Abstract}
 \section{Introduction}
+
+Mahotas is a computer vision library for Python. It operates on numpy arrays,
+but its inner loops are implemented in \cpp{} for speed and ease of
+implementation.
+
+\subsection{Functionality and Interface}
+
+The interface is a procedural interface, with most functions working
+independently of each other (there is code sharing at the implementation
+level).
+
+\begin{description}
+\item[features] Some feature descriptors. In particular, Haralick texture
+features, Zernike moments, local binary patterns, threshold adjacency
+statistics.
+\item[morphological functions] Erosion and dilation, as well as some more
+complex operations.
+\item[watershed] seeded watershed.
+\item[thresholding] some thresholding methods.
+\item[polygon operations] convex hull, polygon drawing.
+\item[\textsc{surf}] Speeded-up Robust Features.
+\end{description}
+
+There are a few interface conventions which apply to many functions.
+
+When meaningful, a structuring element is used to define neighbourhoods or
+adjacency relationships (some functions which use this concept are: watershed,
+erosion, and median filtering). Generally, the default is to use a $3 \times 3$
+cross as the default if no structuring filter is given (the exception to this
+rule is the median filter, where the default is a $3 \times 3$ square).
+
+Often, functions take an argument named \code{output} where the output will be
+stored. This argument is often much more restricted in type. In particular, it
+must often be a contiguous array.\footnote{Numpy supports non-contiguous
+arrays, which are most often slices into other, larger, contiguous arrays
+(e.g., given a $128 \times 128$ contiguous array, one can build a $64 \times
+128$ non-contiguous array by taking every other row).} Since this is a
+performance feature, it is natural that the interface is less flexible
+(accessing a contiguous array is much more efficient than a non-contiguous
+one).
+
+\subsection{Implementation}
+
+Mahotas is written in \cpp, but almost always, the user calls a Python function
+which checks types and then calls the internal function. This is slightly
+slower, but it is easier to develop this way.
+
+The main reason that mahotas is in \cpp{} (and not in pure C) is to use templates.
+Almost \cpp{} functionality is split across 2~functions:
+
+\begin{enumerate}
+\item A \code{py\_function} which uses the Python C~API to get arguments and
+check them. This is almost always pure~C.
+\item A template \code{function<dtype>} which works for the type \code{dtype}
+performing the actual operation.
+\end{enumerate}
+
+So, for example, this is how \emph{erode} is implemented. \code{py\_erode}
+consists mostly of boiler-plate code:
+
+\begin{cplusplus}
+PyObject* py_erode(PyObject* self, PyObject* args) {
+    PyArrayObject* array;
+    PyArrayObject* Bc;
+    if (!PyArg_ParseTuple(args,"OO", &array, &Bc)) {
+        return NULL;
+    }
+    PyArrayObject* res_a = (PyArrayObject*)PyArray_SimpleNew(
+                                array->nd,
+                                array->dimensions,
+                                PyArray_TYPE(array));
+    if (!res_a) return NULL;
+    PyArray_FILLWBYTE(res_a, 0);
+    switch(PyArray_TYPE(array)) {
+#define HANDLE(type) \
+    erode<type>(numpy::aligned_array<type>(res_a), \
+                numpy::aligned_array<type>(array), \
+                numpy::aligned_array<type>(Bc));
+
+        HANDLE_INTEGER_TYPES();
+#undef HANDLE
+    ...
+\end{cplusplus}
+
+
+These functions normally contain a lot of boiler-plate code: read the
+arguments, perform some sanity checks, perhaps a bit of initialisation, and
+then, the switch on the input type with the help of the
+\code{HANDLE\_INTEGER\_TYPES()}, \code{HANDLE\_FLOAT\_TYPE()}, and
+\code{HANDLE\_TYPES()} macros, which call the right specialisation of the
+template that does the actual work. In this example \code{erode} implements
+(binary) erosion:
+
+\begin{cplusplus}
+template<typename T>
+void erode(numpy::aligned_array<T> res,
+            numpy::aligned_array<T> array,
+            numpy::aligned_array<T> Bc) {
+    gil_release nogil;
+    const unsigned N = res.size();
+    typename numpy::aligned_array<T>::iterator iter = array.begin();
+    filter_iterator<T> filter(res.raw_array(), Bc.raw_array());
+    const unsigned N2 = filter.size();
+    T* rpos = res.data();
+
+    for (int i = 0;
+                i != N;
+                ++i, ++rpos, filter.iterate_both(iter)) {
+        for (int j = 0; j != N2; ++j) {
+            T arr_val = false;
+            filter.retrieve(iter, j, arr_val);
+            if (filter[j] && !arr_val) {
+                goto skip_this_one;
+            }
+        }
+        *rpos = true;
+        skip_this_one: continue;
+    }
+}
+\end{cplusplus}
+
+The template machinery is not that complicated and the functions using it are
+very simple and easy to read. The only downside is that there is some expansion
+of code size when the compiler instanciates the function for the several
+integer and floating point types. Given the small size of these functions, this
+is not a big issue.
+
+In the snippet above, you can see some other \cpp{} machinery:
+
+\begin{description}
+\item[\code{gil\_release}] This is a ``resource-acquisition is object
+initialisation'' (\textsc{raii})\footnote{\textsc{Raii} is a design pattern in
+\cpp{}, or other languages with scope linked deterministic object destruction,
+such as D, where a resource is represented by an object, whose constructor
+acquires it and whose destructor releases it. This guarantees that the object
+is correctly released even if the scope is left through an exception
+\citep{Stroustrup1994}.} object that release the Python global interpreter lock
+(\textsc{gil})\footnote{In the CPython interpreter, the most commonly used
+implementation of Python, there is a global lock for many Python related
+functionality, which limits parallelism.} in its constructor and gets it back
+in its destructor. Normally, the template function will release the
+\textsc{gil} after the Python-specific code is done.
+\item[\code{array}] This is a thin wrapper around \code{PyArrayObject} that
+knows its data type and has iterators which resemble the \cpp{} standard
+library.
+\item[\code{filter\_iterator}] This is taken from \code{scipy.ndimage} and it
+is useful to iterate over an image and use a centered filter around each pixel
+(it keeps track of all of the boundary conditions).
+\end{description}
+
+The inner loop is as direct an implementation of erosion as one would wish for:
+for each pixel in the image, look at its neighbours. If all are true, then set
+the corresponding output pixel to \textbf{true} (else, skip it as it has been
+initialised to zero).
+
+Most of the functions follow this architecture.
+
+\medskip
+
+Mahotas includes a full test suite. Every function has at least one
+corresponding test case. There are no known bugs.
+
+It has been available in the Python Package Index since April~2010 and has been
+downloaded over 5500~times. Mahotas is available as a FreeBSD package and is
+under evaluation for inclusion in the Debian distribution (which will cause it
+to be available as a native package for its derivatives, most famously Ubuntu).
+
+\subsection*{Acknowledgements}
+
+Mahotas includes code ported and incorporated from other projects. In
+particular, the \textsc{surf} implementation is a port from the code from
+\textit{dlib},\footnote{Dlib's webpage is at \url{http://dlib.net}.} a very
+good \cpp{} library by Davis King. I also gleaned some insight into the
+implementation of these features from Christopher Evan's OpenSURF library and
+its documentation \citep{evans2009}.\footnote{OpenSURF is available at
+\url{http://www.chrisevansdev.com/computer-vision-opensurf.html}, where several
+documents describe details of the implementation.} The image loading code,
+which interfaces with the FreeImage library, was written by Zachary Pincus and
+some of the support code was written by Peter J. Verveer for the
+\code{scipy.ndimage} project. All of these contributions were integrated while
+respecting the software licenses under which the original code had been
+released. Robert Webb, a summer student, worked with me on the local binary
+patterns implementation. Finally, I thank the several users who have reported
+bugs and submitted small fixes and participated on the project mailing list.
+
 \printbibliography
 \end{document}
