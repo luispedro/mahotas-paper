@@ -31,9 +31,22 @@
 \maketitle
 
 \section*{Abstract}
+Mahotas is a computer vision library for Python. It contains traditional image
+processing functionality such as filtering and morphological operations as well
+as more modern computer vision functions for feature computation, including
+local features.
+
+The interface is in Python, a dynamic programming language, which is very
+appropriate for fast development, but the algorithms are implemented in \cpp{}
+and are tuned for speed.
+
+Mahotas is available under a liberal open source license (MIT License) and is
+available from \url{http://github.com/luispedro/mahotas} or the Python Package
+Index (\url{http://pypi.python.org/pypi/mahotas}).
+
 \section{Introduction}
 
-Mahotas is a computer vision library for Python. It operates on numpy arrays,
+Mahotas is a computer vision library for the Python. It operates on numpy arrays,
 but its inner loops are implemented in \cpp{} for speed and ease of
 implementation.
 
@@ -188,7 +201,9 @@ for each pixel in the image, look at its neighbours. If all are true, then set
 the corresponding output pixel to \textbf{true} (else, skip it as it has been
 initialised to zero).
 
-\medskip
+Most of the functions follow this architecture.
+
+\section{Discussion}
 
 Mahotas includes a full test suite. Every function has at least one
 corresponding test case. There are no known bugs.
@@ -211,9 +226,14 @@ with the FreeImage library, was written by Zachary Pincus and some of the
 support code was written by Peter J. Verveer for the \code{scipy.ndimage}
 project. All of these contributions were integrated while respecting the
 software licenses under which the original code had been released. Robert Webb,
-a summer student, worked with me on the local binary patterns implementation.
-Finally, I thank the several users who have reported bugs and submitted small
-fixes and participated on the project mailing list.
+a summer student at Carnegie Mellon University, worked with me on the initial
+local binary patterns implementation. Finally, I thank the several users who
+have reported bugs, submitted small fixes, and participated on the project
+mailing list.
+
+\textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
+Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and PTDC/SAU-GMG/115652/2008)
+and by a grant from the Siebel Scholars Foundation.
 
 \printbibliography
 \end{document}
