@@ -63,7 +63,7 @@ erosion, and median filtering). Generally, the default is to use a $3 \times 3$
 cross as the default if no structuring filter is given (the exception to this
 rule is the median filter, where the default is a $3 \times 3$ square).
 
-Often, functions take an argument named \code{output} where the output will be
+Often, functions take an argument named \code{out} where the output will be
 stored. This argument is often much more restricted in type. In particular, it
 must often be a contiguous array.\footnote{Numpy supports non-contiguous
 arrays, which are most often slices into other, larger, contiguous arrays
@@ -79,12 +79,13 @@ Mahotas is written in \cpp, but almost always, the user calls a Python function
 which checks types and then calls the internal function. This is slightly
 slower, but it is easier to develop this way.
 
-The main reason that mahotas is in \cpp{} (and not in pure C) is to use templates.
-Almost \cpp{} functionality is split across 2~functions:
+The main reason that mahotas is implemented in \cpp{} (and not in C, which is
+the language of the Python interpreted) is to use templates. Almost \cpp{}
+functionality is split across 2~functions:
 
 \begin{enumerate}
 \item A \code{py\_function} which uses the Python C~API to get arguments and
-check them. This is almost always pure~C.
+check them.
 \item A template \code{function<dtype>} which works for the type \code{dtype}
 performing the actual operation.
 \end{enumerate}
@@ -153,11 +154,10 @@ void erode(numpy::aligned_array<T> res,
 }
 \end{cplusplus}
 
-The template machinery is not that complicated and the functions using it are
-very simple and easy to read. The only downside is that there is some expansion
-of code size when the compiler instanciates the function for the several
-integer and floating point types. Given the small size of these functions, this
-is not a big issue.
+The template machinery makes the functions that use it very simple and easy to
+read. The only downside is that there is some expansion of code size when the
+compiler instanciates the function for the several integer and floating point
+types. Given the small size of these functions, this is not a big issue.
 
 In the snippet above, you can see some other \cpp{} machinery:
 
@@ -173,10 +173,11 @@ is correctly released even if the scope is left through an exception
 implementation of Python, there is a global lock for many Python related
 functionality, which limits parallelism.} in its constructor and gets it back
 in its destructor. Normally, the template function will release the
-\textsc{gil} after the Python-specific code is done.
+\textsc{gil} after the Python-specific code is done. This allows several
+mahotas functions to run concurrently.
 \item[\code{array}] This is a thin wrapper around \code{PyArrayObject} that
 knows its data type and has iterators which resemble the \cpp{} standard
-library.
+library. This makes the code type-safer.
 \item[\code{filter\_iterator}] This is taken from \code{scipy.ndimage} and it
 is useful to iterate over an image and use a centered filter around each pixel
 (it keeps track of all of the boundary conditions).
@@ -186,8 +187,6 @@ The inner loop is as direct an implementation of erosion as one would wish for:
 for each pixel in the image, look at its neighbours. If all are true, then set
 the corresponding output pixel to \textbf{true} (else, skip it as it has been
 initialised to zero).
-
-Most of the functions follow this architecture.
 
 \medskip
 
