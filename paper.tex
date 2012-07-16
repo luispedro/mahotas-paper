@@ -205,12 +205,21 @@ Most of the functions follow this architecture.
 
 \section{Discussion}
 
+Mahotas does not include machine learning related functionality, such as
+$k$-means clustering or any classification. This is the result of an explicit
+design decision. Specialised machine learning packages for Python (e.g.,
+milk\footnote{http://github.com/luispedro/milk},
+scikit-learn\footnote{http://}) already exist. A good classification system can
+benefit both computer vision users and others. As these projects all use Numpy
+arrays as their datatypes, it is easy to use functionality from the different
+project seamlessly (including without any extra copying of data).
+
 Mahotas includes a full test suite. Every function has at least one
 corresponding test case. There are no known bugs.
 
 It has been available in the Python Package Index since April~2010 and has been
-downloaded over 20,000~times. This does not include any downloads from other
-sources.
+downloaded over 20,000~times\footnote{This does not include any downloads from
+other sources.}.
 
 \subsection*{Acknowledgements}
 
