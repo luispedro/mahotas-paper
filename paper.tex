@@ -54,28 +54,29 @@ implementation.
 
 The interface is a procedural interface, with most functions working
 independently of each other (there is code sharing at the implementation
-level).
+level, but this is hidden from the user).
+
+The main functionality is grouped into the following categories:
 
 \begin{description}
+\item[\textsc{surf}] Speeded-up Robust Features.
+\item[Wavelet] Haar and Daubechies wavelets.
 \item[features] Some feature descriptors. In particular, Haralick texture
 features, Zernike moments, local binary patterns, threshold adjacency
 statistics.
 \item[morphological functions] Erosion and dilation, as well as some more
 complex operations.
 \item[watershed] seeded watershed.
-\item[thresholding] some thresholding methods.
 \item[polygon operations] convex hull, polygon drawing.
-\item[\textsc{surf}] Speeded-up Robust Features.
-\item[wavelets] Implementation of Haar wavelet decomposition.
 \end{description}
 
 There are a few interface conventions which apply to many functions.
 
 When meaningful, a structuring element is used to define neighbourhoods or
-adjacency relationships (some functions which use this concept are: watershed,
-erosion, and median filtering). Generally, the default is to use a $3 \times 3$
-cross as the default if no structuring filter is given (the exception to this
-rule is the median filter, where the default is a $3 \times 3$ square).
+adjacency relationships (morphological functions, in particular, use this
+convention). Generally, the default is to use a $3 \times 3$ cross as the
+default if no structuring filter is given (the exception to this rule is the
+median filter, where the default is a $3 \times 3$ square).
 
 Often, functions take an argument named \code{out} where the output will be
 stored. This argument is often much more restricted in type. In particular, it
@@ -132,13 +133,11 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
 \end{cplusplus}
 
 
-These functions normally contain a lot of boiler-plate code: read the
-arguments, perform some sanity checks, perhaps a bit of initialisation, and
-then, the switch on the input type with the help of the
-\code{HANDLE\_INTEGER\_TYPES()}, \code{HANDLE\_FLOAT\_TYPE()}, and
-\code{HANDLE\_TYPES()} macros, which call the right specialisation of the
-template that does the actual work. In this example \code{erode} implements
-(binary) erosion:
+This functions retrieves the arguments, performs some sanity checks, performs a
+bit of initialisation, and finally, switches in the input type with the help of
+the \code{HANDLE\_INTEGER\_TYPES()} macro, which call the right specialisation
+of the template that does the actual work. In this example \code{erode}
+implements (binary) erosion:
 
 \begin{cplusplus}
 template<typename T>
@@ -202,8 +201,6 @@ for each pixel in the image, look at its neighbours. If all are true, then set
 the corresponding output pixel to \textbf{true} (else, skip it as it has been
 initialised to zero).
 
-Most of the functions follow this architecture.
-
 \section{Discussion}
 
 Mahotas does not include machine learning related functionality, such as
@@ -215,12 +212,15 @@ benefit both computer vision users and others. As these projects all use Numpy
 arrays as their datatypes, it is easy to use functionality from the different
 project seamlessly (including without any extra copying of data).
 
-Mahotas includes a full test suite. Every function has at least one
-corresponding test case. There are no known bugs.
+Python is an ideal language for fast development of both applications and
+scientific software. With a fast library of computer vision and image
+processing functions (implemented in \cpp{}, as the standard Python interpreter
+is too slow for a direct Python implementation).
 
-It has been available in the Python Package Index since April~2010 and has been
-downloaded over 20,000~times\footnote{This does not include any downloads from
-other sources.}.
+Mahotas has been available in the Python Package Index since April~2010 and has
+been downloaded over 20,000~times. This does not include any downloads from
+other sources. Mahotas includes a full test suite (version 1.0 has 100\% test
+coverage). There are no known bugs.
 
 \subsection*{Acknowledgements}
 
