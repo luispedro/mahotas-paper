@@ -50,7 +50,14 @@ Mahotas is a computer vision library for the Python. It operates on numpy arrays
 but its inner loops are implemented in \cpp{} for speed and ease of
 implementation.
 
-\subsection{Functionality and Interface}
+Version 1.0 has been released recently and this is now a mature, well-tested
+package (the first version was made available over 4~years ago). \footnote{Note
+for reviewers: the version currently available implements all functionality
+described in this manuscript. I will release it as version 1.0 when this
+manuscript is accepted. Naturally, any bugs that are reported in the
+meanwhile will be addressed.}
+
+\section{Functionality and Interface}
 
 The interface is a procedural interface, with most functions working
 independently of each other (there is code sharing at the implementation
@@ -88,7 +95,7 @@ performance feature, it is natural that the interface is less flexible
 (accessing a contiguous array is much more efficient than a non-contiguous
 one).
 
-\subsection{Implementation}
+\section{Implementation}
 
 Mahotas is written in \cpp, but almost always, the user calls a Python function
 which checks types and then calls the internal function. This is slightly
