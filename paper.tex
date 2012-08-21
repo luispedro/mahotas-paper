@@ -47,9 +47,13 @@ Index (\url{http://pypi.python.org/pypi/mahotas}).
 \section{Introduction}
 
 Mahotas is a computer vision library for the Python. It operates on numpy
-arrays~\cite{numpy}. Therefore, it uses all the infrastructure built by that
-project for storing information. However, its inner loops are implemented in
-\cpp{} for speed and ease of implementation.
+arrays~\citep{numpystructure}. Therefore, it uses all the infrastructure built
+by that project for storing information.
+
+Python is a natural ``glue'' language: it is easy to use state-of-the-art
+libraries written in multiple languages~\citep{10.1109/MCSE.2007.58}. Mahotas
+itself is a mix of high-level Python and low-level \cpp{}. This achieves a good
+balance between speed and ease of implementation.
 
 Version 1.0 has been released recently and this is now a mature, well-tested
 package (the first version was made available over 4~years ago). \footnote{Note
@@ -67,7 +71,7 @@ level, but this is hidden from the user).
 The main functionality is grouped into the following categories:
 
 \begin{description}
-\item[\textsc{surf}] Speeded-up Robust Features.
+\item[\textsc{surf}] Speeded-up Robust Features~\citep{eth_biwi_00517}.
 \item[Wavelet] Haar and Daubechies wavelets.
 \item[features] Some feature descriptors. In particular, Haralick texture
 features, Zernike moments, local binary patterns, threshold adjacency
@@ -215,10 +219,12 @@ Mahotas does not include machine learning related functionality, such as
 $k$-means clustering or any classification. This is the result of an explicit
 design decision. Specialised machine learning packages for Python (e.g.,
 milk\footnote{http://github.com/luispedro/milk},
-scikit-learn\footnote{http://}) already exist. A good classification system can
-benefit both computer vision users and others. As these projects all use Numpy
-arrays as their datatypes, it is easy to use functionality from the different
-project seamlessly (including without any extra copying of data).
+scikit-learn\footnote{http://scikit-learn}) already
+exist~\citep{Pedregosa:2011:SML:2078183.2078195}. A good classification (or
+other) system can benefit both computer vision users and others. As these
+projects all use Numpy arrays as their data types, it is easy to use
+functionality from the different project seamlessly (no copying of data is
+necessary).
 
 Python is an ideal language for fast development of both applications and
 scientific software. With a fast library of computer vision and image
