@@ -51,14 +51,14 @@ Index (\url{http://pypi.python.org/pypi/mahotas}).
 Mahotas is a computer vision library for the Python. It operates on numpy
 arrays~\citep{numpystructure}. Therefore, it uses all the infrastructure built
 by that project for storing information. In particular, unlike libraries
-written in the C~Language or in Java, Mahotas does not need to define a data
-structure, but uses the numpy array. Many basic manipulation functionality that
-would otherwise be part of a computer vision library are handled by numpy, for
-example computing averages and other simple statistics, handling multi-channel
-images, converting between types (integer and floating point images are
-supported by mahotas, whenever it is meaningful). For the user, this has the
-additional advantage that they do not need to learn yet another set of
-functions.
+written in the C~Language or in Java~\citep{Marcel:2010:TMP:1873951.1874254},
+Mahotas does not need to define a data structure, but uses the numpy array
+structure. Many basic manipulation functionality that would otherwise be part
+of a computer vision library are handled by numpy, for example computing
+averages and other simple statistics, handling multi-channel images, converting
+between types (integer and floating point images are supported by mahotas,
+whenever it is meaningful). For the user, this has the additional advantage
+that they do not need to learn yet another set of functions.
 
 On the other end, by integrating into the Python numeric ecosystem, users can
 use other packages in a seamless way. In particular, mahotas does not implement
@@ -331,9 +331,16 @@ functionality from the different project seamlessly (no copying of data is
 necessary).
 
 Python is an ideal language for fast development of both applications and
-scientific software. With a fast library of computer vision and image
-processing functions (implemented in \cpp{}, as the standard Python interpreter
-is too slow for a direct Python implementation).
+scientific software. For this platform, Mahotas is a fast library of computer
+vision and image processing functions. It is implemented in \cpp{}, as the
+standard Python interpreter is too slow for a direct Python implementation.
+However, all of the Python interface code is hand-written, as opposed to using
+automatic interface generators like Swig~\cite{Beazley2003599}. This is more
+work, but the end result is of much higher quality, especially when it comes to
+giving useful error messages (e.g., when a type mismatch occurs, an automatic
+system will often be forced to resort to a generic message as it does not have
+any knowledge of what the arguments mean besides their automatically inferred
+types).
 
 Mahotas has been available in the Python Package Index since April~2010 and has
 been downloaded over 20,000~times. This does not include any downloads from
