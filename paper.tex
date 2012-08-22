@@ -25,7 +25,9 @@
 \addbibresource{references.bib}
 
 \title{Mahotas: Open source software for scriptable computer vision}
-\author{Luis Pedro Coelho}
+\author{Luis Pedro Coelho\\
+Lane Center for Computational Biology, Carnegie Mellon University, Pittsburgh, USA\\
+Instituto de Medicina Molecular, Lisboa, Portugal}
 
 \begin{document}
 \maketitle
@@ -48,20 +50,34 @@ Index (\url{http://pypi.python.org/pypi/mahotas}).
 
 Mahotas is a computer vision library for the Python. It operates on numpy
 arrays~\citep{numpystructure}. Therefore, it uses all the infrastructure built
-by that project for storing information.
+by that project for storing information. In particular, unlike libraries
+written in the C~Language or in Java, Mahotas does not need to define a data
+structure, but uses the numpy array. Many basic manipulation functionality that
+would otherwise be part of a computer vision library are handled by numpy, for
+example computing averages and other simple statistics, handling multi-channel
+images, converting between types (integer and floating point images are
+supported by mahotas, whenever it is meaningful). For the user, this has the
+additional advantage that they do not need to learn yet another set of
+functions.
+
+On the other end, by integrating into the Python numeric ecosystem, users can
+use other packages in a seamless way. In particular, mahotas does not implement
+any machine learning functionality, but rather advises the user to use another,
+specialised package, such as scikits-learn or milk.
 
 Python is a natural ``glue'' language: it is easy to use state-of-the-art
 libraries written in multiple languages~\citep{10.1109/MCSE.2007.58}. Mahotas
 itself is a mix of high-level Python and low-level \cpp{}. This achieves a good
 balance between speed and ease of implementation.
 
-Version 1.0 has been released recently and this is now a mature, well-tested
-package (the first version was made available over 4~years ago). \footnote{Note
-for reviewers: the version currently available implements all functionality
-described in this manuscript. I will release it as version 1.0 when this
-manuscript is accepted. Naturally, any bugs that are reported in the
-meanwhile will be addressed.} Mahotas runs and is used on different versions of
-Unix (including Linux, SunOS, and FreeBSD), Mac OS X, and Windows.
+Version 1.0 of mahotas has been released recently and this is now a mature,
+well-tested package (the first version was made available over 4~years ago).
+\footnote{Note for reviewers: the version currently available implements all
+functionality described in this manuscript. I will release it as version 1.0
+when this manuscript is accepted to coincide with publication. Naturally, any
+bugs that are found and reported in the meanwhile will be addressed.} Mahotas
+runs and is used on different versions of Unix (including Linux, SunOS, and
+FreeBSD), Mac OS X, and Windows.
 
 \section{Functionality and Interface}
 
@@ -72,22 +88,28 @@ level, but this is hidden from the user).
 The main functionality is grouped into the following categories:
 
 \begin{description}
-\item[\textsc{surf}] Speeded-up Robust Features~\citep{eth_biwi_00517}.
-\item[Wavelet] Haar and Daubechies wavelets.
-\item[features] Some feature descriptors. In particular, Haralick texture
+\item[\textsc{surf}] Speeded-up Robust Features~\citep{eth_biwi_00517}. This is
+a collection of local features.
+\item[features] Global feature descriptors. In particular, Haralick texture
 features, Zernike moments, local binary patterns, threshold adjacency
 statistics.
+\item[Wavelet] Haar and Daubechies wavelets. Forward and reverse transforms.
 \item[morphological functions] Erosion and dilation, as well as some more
-complex operations.
-\item[watershed] seeded watershed.
+complex operations built on these. There are both binary and grayscale
+implementations of these operators.
+\item[watershed] seeded watershed and distance map transforms.
+\item[filtering] Gaussian filtering and general convolutions.
 \item[polygon operations] convex hull, polygon drawing.
 \end{description}
 
-There are a few interface conventions which apply to many functions.
+In general, functions operate on all data types (except when it not well
+defined). This is performed without any extra memory copies. Mahotas is heavily
+optimised for both speed and memory usage.
 
-When meaningful, a structuring element is used to define neighbourhoods or
-adjacency relationships (morphological functions, in particular, use this
-convention). Generally, the default is to use a $3 \times 3$ cross as the
+There are a few interface conventions which apply to many functions. When
+meaningful, a structuring element is used to define neighbourhoods or adjacency
+relationships (morphological functions, in particular, use this convention).
+Generally, the default is to use a $3 \times 3$ cross as the
 default if no structuring filter is given (the exception to this rule is the
 median filter, where the default is a $3 \times 3$ square).
 
@@ -103,9 +125,10 @@ one).
 
 \section{Implementation}
 
-Mahotas is written in \cpp, but almost always, the user calls a Python function
-which checks types and then calls the internal function. This is slightly
-slower, but it is easier to develop this way.
+Mahotas is written in \cpp, but this is completely hidden from the user as
+there are hand-written Python wrappers for all functions (automatically
+generated wrappers inevitably lead to worse error messages and are less
+flexible).
 
 The main reason that mahotas is implemented in \cpp{} (and not in C, which is
 the language of the Python interpreted) is to use templates. Almost \cpp{}
@@ -144,7 +167,6 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
 #undef HANDLE
     ...
 \end{cplusplus}
-
 
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
@@ -213,6 +235,14 @@ The inner loop is as direct an implementation of erosion as one would wish for:
 for each pixel in the image, look at its neighbours. If all are true, then set
 the corresponding output pixel to \textbf{true} (else, skip it as it has been
 initialised to zero).
+
+Mahotas uses the standard Python build machinery and distribution channels.
+Building and installing from source code is done using
+\begin{verbatim}
+python setup.py install
+\end{verbatim}
+Alternatively, Python based package managers (such as \texttt{easy\_install} or
+\texttt{pip}) can be used (mahotas works well with these systems).
 
 \section{Discussion}
 
