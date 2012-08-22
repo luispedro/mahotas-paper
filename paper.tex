@@ -123,6 +123,79 @@ performance feature, it is natural that the interface is less flexible
 (accessing a contiguous array is much more efficient than a non-contiguous
 one).
 
+\subsection{Example of Use}
+
+This is a simple example of mahotas usage. Code for this and other examples is
+present in the mahotas source distribution under the \texttt{demos/} directory.
+
+In this tutorial, we load an image and find SURF interest point and descriptors
+on it.
+
+We start by importing the necessary packages, including numpy and mahotas. We
+also use \textit{milk}, to demonstrate how the mahotas output can integrate
+with a machine learning package.
+
+\begin{python}
+import numpy as np
+import mahotas
+from mahotas.features import surf
+import milk
+\end{python}
+
+The first step is to load the image and convert to 8~bit numbers.
+\begin{python}
+f = mahotas.imread('luispedro.jpg', as_grey=True)
+f = f.astype(np.uint8)
+\end{python}
+
+We can now compute SURF interest points and descriptors.
+\begin{python}
+spoints = surf.surf(f, 4, 6, 2)
+\end{python}
+
+Using numpy operations and milk, we can select only the descriptors and cluster
+them into a group of five:
+
+\begin{python}
+descrs = spoints[:,6:]
+
+values, _ = milk.kmeans(descrs, 5)
+\end{python}
+
+Finally, we can show the 
+\begin{python}
+colors = np.array(
+    [ 255,  25,   1],
+    [203,  77,  37],
+    [151, 129,  56],
+    [ 99, 181,  52],
+    [ 47, 233,   5]])
+f2 = surf.show_surf(f, spoints[:64], values, colors)
+\end{python}
+
+Using matplotlib~\citep{10.1109/MCSE.2007.55}, we finally display the image as
+Figure~\ref{fig:surf}.
+
+\begin{python}
+from matplotlib import pyplot as plt
+plt.subplot(1,2,1)
+plt.imshow(f)
+plt.subplot(1,2,2)
+plt.imshow(f2)
+\end{python}
+
+The easy interaction with matplotlib is another way in which we benefit from
+the numpy-based ecosystem.
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=.8\textwidth]{surf-tutorial}
+\end{center}
+\caption{Example of Usage. On the left, the original image is shown, while on
+the right SURF detections are represented as rectangles of different colours.}
+\label{fig:surf}
+\end{figure}
+
 \section{Implementation}
 
 Mahotas is written in \cpp, but this is completely hidden from the user as
