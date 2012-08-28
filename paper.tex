@@ -46,6 +46,8 @@ Mahotas is available under a liberal open source license (MIT License) and is
 available from \url{http://github.com/luispedro/mahotas} or the Python Package
 Index (\url{http://pypi.python.org/pypi/mahotas}).
 
+\textbf{Keywords:} computer vision, image processing.
+
 \section{Introduction}
 
 Mahotas is a computer vision library for the Python Programming Language
@@ -80,7 +82,9 @@ bugs that are found and reported in the meanwhile will be addressed.} Mahotas
 runs and is used on different versions of Unix (including Linux, SunOS, and
 FreeBSD), Mac OS X, and Windows.
 
-\section{Functionality and Interface}
+\section{Implementation and Architecture}
+
+\subsection{Interface}
 
 The interface is a procedural interface, with most functions working
 independently of each other (there is code sharing at the implementation
@@ -94,7 +98,7 @@ a collection of local features.
 \item[features] Global feature descriptors. In particular, Haralick texture
 features, Zernike moments, local binary patterns, threshold adjacency
 statistics.
-\item[Wavelet] Haar and Daubechies wavelets. Forward and reverse transforms.
+\item[Wavelet] Haar and Daubechies wavelets. Forward and inverse transforms.
 \item[morphological functions] Erosion and dilation, as well as some more
 complex operations built on these. There are both binary and grayscale
 implementations of these operators.
@@ -111,9 +115,9 @@ optimised for both speed and memory usage.
 There are a few interface conventions which apply to many functions. When
 meaningful, a structuring element is used to define neighbourhoods or adjacency
 relationships (morphological functions, in particular, use this convention).
-Generally, the default is to use a $3 \times 3$ cross as the
-default if no structuring filter is given (the exception to this rule is the
-median filter, where the default is a $3 \times 3$ square).
+Generally, the default is to use a $3 \times 3$ cross as the default if no
+structuring filter is given (the exception to this rule is the median filter,
+where the default is a $3 \times 3$ square).
 
 Often, functions take an argument named \code{out} where the output will be
 stored. This argument is often much more restricted in type. In particular, it
@@ -198,7 +202,7 @@ the right SURF detections are represented as rectangles of different colours.}
 \label{fig:surf}
 \end{figure}
 
-\section{Implementation}
+\subsection{Implementation}
 
 Mahotas is written in \cpp, but this is completely hidden from the user as
 there are hand-written Python wrappers for all functions (automatically
@@ -319,6 +323,50 @@ python setup.py install
 Alternatively, Python based package managers (such as \texttt{easy\_install} or
 \texttt{pip}) can be used (mahotas works well with these systems).
 
+\subsection{Quality Control}
+
+Mahotas includes a complete automated suite of unit tests. These all
+functionality and include several regression tests. There are no known bugs in
+version~1.0. In fact, no releases have ever been performed with known bugs.
+Naturally, bugs were, occasionally, discovered in released versions, but
+corrected before the next release.
+
+The development is completely open-source and development versions are
+available. Many users have submitted bug reports and fixes.
+
+\section{Availability}
+
+\textbf{Operating system}\\
+Mahotas runs and is used on different versions of Unix (including Linux, SunOS,
+and FreeBSD), Mac OS X, and Windows.
+
+
+\textbf{Programming language}\\
+Mahotas works in Python (minimal version is~2.5 and works in all more recent
+versions, including in the Python~3 series).
+
+\textbf{Additional system requirements}\\
+None.
+
+\textbf{Dependencies}\\
+It requires numpy to be present and installed.
+
+
+\textbf{List of contributors}\\
+Luis Pedro Coelho, Zachary Pincus, Peter J. Verveer, Davis King, Robert Webb
+(Carnegie Mellon University), Matthew Goodman, K.-Michael Aye (University of
+Bern), Rita Simões, Joe Kington (University of Wisconsin Dept. of Geoscience),
+Christoph Gohlke (University of California, Irvine), and Sandro Knauss.
+
+
+\subsubsection{Software location}
+
+\textbf{Code repository}\\
+\textit{Name}: Github\\
+\textit{Identifier}: https://github.com/luispedro/mahotas\\
+\textit{Licence}: MIT\\
+\textit{Date published}: Since 2009
+
 \section{Discussion}
 
 Mahotas does not include machine learning related functionality, such as
@@ -349,6 +397,12 @@ been downloaded over 20,000~times. This does not include any downloads from
 other sources. Mahotas includes a full test suite (version 1.0 has 100\% test
 coverage). There are no known bugs.
 
+\section{Reuse Potential}
+
+Originally, this code was developed in the context of cellular image analysis.
+However, none of the functionality is specific to this context and many
+computer vision pipelines can make use of it.
+
 \subsection*{Acknowledgements}
 
 Mahotas includes code ported and incorporated from other projects. In
@@ -371,6 +425,7 @@ mailing list.
 \textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
 Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and PTDC/SAU-GMG/115652/2008)
 and by a grant from the Siebel Scholars Foundation.
+
 
 \printbibliography
 \end{document}
