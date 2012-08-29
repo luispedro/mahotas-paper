@@ -210,7 +210,7 @@ generated wrappers inevitably lead to worse error messages and are less
 flexible).
 
 The main reason that mahotas is implemented in \cpp{} (and not in C, which is
-the language of the Python interpreted) is to use templates. Almost \cpp{}
+the language of the Python interpreter) is to use templates. Almost \cpp{}
 functionality is split across 2~functions:
 
 \begin{enumerate}
@@ -304,7 +304,8 @@ in its destructor. Normally, the template function will release the
 mahotas functions to run concurrently.
 \item[\code{array}] This is a thin wrapper around \code{PyArrayObject} that
 knows its data type and has iterators which resemble the \cpp{} standard
-library. This makes the code type-safer.
+library. This makes the code type-safer. This is also a \textsc{raii} object in
+terms of managing Python reference counts.
 \item[\code{filter\_iterator}] This is taken from \code{scipy.ndimage} and it
 is useful to iterate over an image and use a centered filter around each pixel
 (it keeps track of all of the boundary conditions).
