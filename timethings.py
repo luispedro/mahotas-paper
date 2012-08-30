@@ -4,7 +4,13 @@ import skimage.feature
 import numpy as np
 import timeit
 import mahotas
-luispedro_image = '../mahotas/mahotas/demos/data/luispedro.jpg'
+
+from os import path
+luispedro_image = path.join(
+            path.dirname(mahotas.__file__),
+            'demos',
+            'data',
+            'luispedro.jpg')
 f = mahotas.imread(luispedro_image, as_grey=True)
 markers = np.zeros_like(f)
 markers[100,100] = 1
