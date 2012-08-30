@@ -1,5 +1,6 @@
 \documentclass{article}
 \usepackage{hyperref}
+\usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{python}
 \usepackage[%
@@ -36,7 +37,7 @@ Instituto de Medicina Molecular, Lisboa, Portugal}
 Mahotas is a computer vision library for Python. It contains traditional image
 processing functionality such as filtering and morphological operations as well
 as more modern computer vision functions for feature computation, including
-local features.
+interest point detection and local descriptors.
 
 The interface is in Python, a dynamic programming language, which is very
 appropriate for fast development, but the algorithms are implemented in \cpp{}
@@ -53,19 +54,20 @@ Index (\url{http://pypi.python.org/pypi/mahotas}).
 Mahotas is a computer vision library for the Python Programming Language
 (versions 2.5 and up, including version 3). It operates on numpy
 arrays~\citep{numpystructure}. Therefore, it uses all the infrastructure built
-by that project for storing information. In particular, unlike libraries
-written in the C~Language or in Java~\citep{Marcel:2010:TMP:1873951.1874254},
-Mahotas does not need to define a data structure, but uses the numpy array
-structure. Many basic manipulation functionality that would otherwise be part
-of a computer vision library are handled by numpy, for example computing
-averages and other simple statistics, handling multi-channel images, converting
-between types (integer and floating point images are supported by mahotas,
-whenever it is meaningful). For the user, this has the additional advantage
-that they do not need to learn yet another set of functions.
+by that project for storing information and performing basic manipulations and
+computations. In particular, unlike libraries written in the C~Language or in
+Java~\citep{Marcel:2010:TMP:1873951.1874254}, Mahotas does not need to define a
+data structure, but uses the numpy array structure. Many basic manipulation
+functionality that would otherwise be part of a computer vision library are
+handled by numpy, for example computing averages and other simple statistics,
+handling multi-channel images, converting between types (integer and floating
+point images are supported by mahotas, whenever it is meaningful). For the
+user, this has the additional advantage that they do not need to learn yet
+another set of functions.
 
-On the other end, by integrating into the Python numeric ecosystem, users can
-use other packages in a seamless way. In particular, mahotas does not implement
-any machine learning functionality, but rather advises the user to use another,
+Additionally, by integrating into the Python numeric ecosystem, users can use
+other packages in a seamless way. In particular, mahotas does not implement any
+machine learning functionality, but rather advises the user to use another,
 specialised package, such as scikits-learn or milk.
 
 Python is a natural ``glue'' language: it is easy to use state-of-the-art
@@ -99,7 +101,7 @@ includes both keypoint detection and descriptor computation.
 features, Zernike moments, local binary patterns, and threshold adjacency
 statistics (both the original~\citep{Hamilton2007} and the parameter-free
 versions~\citep{Coelho2010}).
-\item[Wavelet] Haar and Daubechies wavelets. Forward and inverse transforms.
+\item[wavelet] Haar and Daubechies wavelets. Forward and inverse transforms.
 \item[morphological functions] Erosion and dilation, as well as some more
 complex operations built on these. There are both binary and grayscale
 implementations of these operators.
@@ -109,10 +111,9 @@ transforms~\citep{felzenszwalb}.
 \item[polygon operations] convex hull, polygon drawing.
 \end{description}
 
-In general, functions operate on all data types (in some cases, the operation
-is only meaningful for floating point arrays, for example). This is performed
-without any extra memory copies. Mahotas is heavily optimised for both speed
-and memory usage (it can be used with very large arrays).
+In general, functions operate on all data types. This is performed without any
+extra memory copies. Mahotas is heavily optimised for both speed and memory
+usage (it can be used with very large arrays).
 
 There are a few interface conventions which apply to many functions. When
 meaningful, a structuring element is used to define neighbourhoods or adjacency
@@ -231,31 +232,32 @@ consists mostly of boiler-plate code:
 PyObject* py_erode(PyObject* self, PyObject* args) {
     PyArrayObject* array;
     PyArrayObject* Bc;
-    if (!PyArg_ParseTuple(args,"OO", &array, &Bc)) {
+    PyArrayObject* output;
+    if (!PyArg_ParseTuple(args, "OOO", &array, &Bc, &output) ||
+        !numpy::are_arrays(array, Bc, output) || !numpy::same_shape(array, output) ||
+        !PyArray_EquivTypenums(PyArray_TYPE(array), PyArray_TYPE(Bc)) ||
+        !PyArray_EquivTypenums(PyArray_TYPE(array), PyArray_TYPE(output)) ||
+        PyArray_NDIM(array) != PyArray_NDIM(Bc)
+    ) {
+        PyErr_SetString(PyExc_RuntimeError, TypeErrorMsg);
         return NULL;
     }
-    PyArrayObject* res_a = (PyArrayObject*)PyArray_SimpleNew(
-                                array->nd,
-                                array->dimensions,
-                                PyArray_TYPE(array));
-    if (!res_a) return NULL;
-    PyArray_FILLWBYTE(res_a, 0);
-    switch(PyArray_TYPE(array)) {
+    holdref r_o(output);
+
 #define HANDLE(type) \
-    erode<type>(numpy::aligned_array<type>(res_a), \
+    erode<type>(numpy::aligned_array<type>(output), \
                 numpy::aligned_array<type>(array), \
                 numpy::aligned_array<type>(Bc));
-
-        HANDLE_INTEGER_TYPES();
+    SAFE_SWITCH_ON_INTEGER_TYPES_OF(array, true);
 #undef HANDLE
     ...
 \end{cplusplus}
 
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
-the \code{HANDLE\_INTEGER\_TYPES()} macro, which call the right specialisation
-of the template that does the actual work. In this example \code{erode}
-implements (binary) erosion:
+the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES()} macro, which call the right
+specialisation of the template that does the actual work. In this example
+\code{erode} implements (binary) erosion:
 
 \begin{cplusplus}
 template<typename T>
@@ -263,31 +265,29 @@ void erode(numpy::aligned_array<T> res,
             numpy::aligned_array<T> array,
             numpy::aligned_array<T> Bc) {
     gil_release nogil;
-    const unsigned N = res.size();
+    const int N = res.size();
     typename numpy::aligned_array<T>::iterator iter = array.begin();
-    filter_iterator<T> filter(res.raw_array(), Bc.raw_array());
-    const unsigned N2 = filter.size();
+    filter_iterator<T> filter(array.raw_array(), Bc.raw_array(), EXTEND_NEAREST, is_bool(T()));
+    const int N2 = filter.size();
     T* rpos = res.data();
 
     for (int i = 0;
-                i != N;
+            i != N;
                 ++i, ++rpos, filter.iterate_both(iter)) {
+        T value = std::numeric_limits<T>::max();
         for (int j = 0; j != N2; ++j) {
-            T arr_val = false;
+            T arr_val = T();
             filter.retrieve(iter, j, arr_val);
-            if (filter[j] && !arr_val) {
-                goto skip_this_one;
-            }
+            value = std::min<T>(value, erode_sub(arr_val, filter[j]));
         }
-        *rpos = true;
-        skip_this_one: continue;
+        *rpos = value;
     }
 }
 \end{cplusplus}
 
 The template machinery makes the functions that use it very simple and easy to
 read. The only downside is that there is some expansion of code size when the
-compiler instanciates the function for the several integer and floating point
+compiler instantiates the function for the several integer and floating point
 types. Given the small size of these functions, this is not a big issue.
 
 In the snippet above, you can see some other \cpp{} machinery:
@@ -316,9 +316,47 @@ is useful to iterate over an image and use a centered filter around each pixel
 \end{description}
 
 The inner loop is as direct an implementation of erosion as one would wish for:
-for each pixel in the image, look at its neighbours. If all are true, then set
-the corresponding output pixel to \textbf{true} (else, skip it as it has been
-initialised to zero).
+for each pixel in the image, look at its neighbours, subtract the filter value,
+and compute the minimum of this operation.
+
+\subsection{Efficiency}
+
+\begin{table}
+\centering
+\begin{tabular}{lrr}
+\toprule
+Operation & mahotas & pymorphy\\
+\midrule
+erode       &     9.90 &    13.06 \\
+dilate      &    10.48 &     8.17 \\
+open        &    20.26 &    21.05 \\
+cwatershed  &   181.47 & 50211.56 \\
+center mass &     6.39 &       NA \\
+daubechies  &    16.92 &       NA \\
+haralick    &   276.90 &       NA \\
+\bottomrule
+\end{tabular}
+\caption{Efficiency Results for mahotas and pymorph. Shown are values as
+multiples of the time that \code{numpy.max(f)} takes.}
+\label{tab:efficiency}
+\end{table}
+
+Table~\ref{tab:efficiency} shows timings for different operations. These were
+normalized to multiples of the time it takes to go over the image and find its
+maximum pixel value (this was done using \code{numpy.max(image}). The
+measurements shown were obtained on an Intel 64~bit system, running Ubuntu
+Linux. However, due to the normalization, measurements obtained on another
+system (Intel 32~bits running Mac OS) were qualitatively similar (data not
+shown).
+
+The comparison is against Pymorph~\citep{DougLotu:03}, which is a pure Python
+implementation of some of the same functions. We can see that simple
+morphological operations (erosion, dilation, opening) take a similar amount of
+time in mahotas and pymorph (pymorph intelligently uses numpy operations for
+these). However, some more complex operations such as watershed are much faster
+in mahotas.
+
+\bigskip
 
 In keeping with the philosophy of blending in with the ecosystem, Mahotas uses
 the standard Python build machinery and distribution channels. Building and
@@ -344,7 +382,9 @@ available. Many users have submitted bug reports and fixes.
 
 \textbf{Operating system}\\
 Mahotas runs and is used on different versions of Unix (including Linux, SunOS,
-and FreeBSD), Mac OS X, and Windows.
+and FreeBSD), Mac OS X, and Windows.\footnote{Christoph Gohlke has been
+instrumental in providing Windows packages as well as several fixes for that
+platform.}
 
 
 \textbf{Programming language}\\
@@ -375,7 +415,25 @@ California, Irvine), and Sandro Knauss (University of Bremen).
 \textit{Licence}: MIT\\
 \textit{Date published}: Since 2009
 
+\section{Reuse Potential}
+
+Originally, this code was developed in the context of cellular image analysis.
+However, none of the functionality is specific to this context and many
+computer vision pipelines can make use of it.
+
+This package (and earlier versions of it) have been used by
+myself~\citep{Coelho2009,Coelho2010a} and close collaborators in several
+publications~\citep{omerosearcher}. Other groups have used in published work,
+both in cell image analysis~\citep{CYTO:CYTO22034} and in other
+areas~\citep{springerlink:10.1007/978-3-642-32335-5_2}.
+
+
 \section{Discussion}
+
+Python is an excellent language for scientific programming because of the
+inherent properties of the language and because of the infrastructure that has
+been built around the numpy project. Mahotas works in this environment to
+provide the user with image analysis and computer vision functionality.
 
 Mahotas does not include machine learning related functionality, such as
 $k$-means clustering or any classification. This is the result of an explicit
@@ -400,20 +458,7 @@ types).
 
 Mahotas has been available in the Python Package Index since April~2010 and has
 been downloaded over 20,000~times. This does not include any downloads from
-other sources. Mahotas includes a full test suite (version 1.0 has 100\% test
-coverage). There are no known bugs.
-
-\section{Reuse Potential}
-
-Originally, this code was developed in the context of cellular image analysis.
-However, none of the functionality is specific to this context and many
-computer vision pipelines can make use of it.
-
-This package (and earlier versions of it) have been used by
-myself~\citep{Coelho2009,Coelho2010a} and close collaborators in several
-publications~\citep{omerosearcher}. Other groups have used in published work,
-both in cell image analysis~\citep{CYTO:CYTO22034} and in other
-areas~\citep{springerlink:10.1007/978-3-642-32335-5_2}.
+other sources. Mahotas includes a full test suite. There are no known bugs.
 
 \subsection*{Acknowledgements}
 
