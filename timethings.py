@@ -4,6 +4,7 @@ import skimage.feature
 import numpy as np
 import timeit
 import mahotas
+import cv2
 
 from os import path
 luispedro_image = path.join(
@@ -15,7 +16,7 @@ f = mahotas.imread(luispedro_image, as_grey=True)
 markers = np.zeros_like(f)
 markers[100,100] = 1
 markers[200,200] = 2
-f = f.astype(int)
+f = f.astype(np.uint8)
 markers = markers.astype(int)
 otsu = mahotas.otsu(f.astype(np.uint8))
 fbin = f > otsu
@@ -23,6 +24,10 @@ fbin8 = fbin.astype(np.uint8)
 Bc = np.eye(3)
 Bc = Bc.astype(bool)
 Bc8 = Bc.astype(np.uint8)
+f3 = np.dstack([f,f,f])
+f3 = f3.astype(np.uint8)
+f3 = f3.copy()
+markers32 = markers.astype(np.int32)
 
 pre ='''
 import skimage.filter
@@ -31,14 +36,17 @@ import skimage.feature
 import numpy as np
 import mahotas
 import pymorph
+import cv2
 import timethings
 f = timethings.f
+f3 = timethings.f3
 fbin = timethings.fbin
 fbin8 = timethings.fbin8
 f64 = f.astype(np.float64)
 Bc = timethings.Bc
 Bc8 = timethings.Bc8
 markers = timethings.markers
+markers32 = timethings.markers32
 '''
 
 def t(s):
@@ -48,20 +56,24 @@ tests = [
     ('erode', [
         'mahotas.erode(fbin, Bc)',
         'pymorph.erode(fbin, Bc)',
-        'skimage.morphology.opening(fbin8, Bc8)',
+        'skimage.morphology.erosion(fbin8, Bc8)',
+        'cv2.erode(fbin8, Bc8)',
         ]),
     ('dilate', [
         'mahotas.dilate(fbin, Bc)',
         'pymorph.dilate(fbin, Bc)',
         'skimage.morphology.dilation(fbin8, Bc8)',
+        'cv2.dilate(fbin8, Bc8)',
         ]),
     ('open', [
         'mahotas.open(fbin, Bc)',
         'pymorph.open(fbin, Bc)',
         'skimage.morphology.opening(fbin8, Bc8)',
+        None,
         ]),
     ('center mass', [
         'mahotas.center_of_mass(f)',
+        None,
         None,
         None,
         ]),
@@ -69,14 +81,17 @@ tests = [
         'mahotas.sobel(f)',
         None,
         'skimage.filter.sobel(f64)',
+        'cv2.Sobel(f, cv2.CV_32F, 1, 1)',
         ]),
     ('cwatershed', [
         'mahotas.cwatershed(f, markers)',
         'pymorph.cwatershed(f, markers)',
         'skimage.morphology.watershed(f, markers)',
+        'cv2.watershed(f3, markers32.copy())',
         ]),
     ('daubechies', [
         'mahotas.daubechies(f, "D4")',
+        None,
         None,
         None,
         ]),
@@ -84,6 +99,7 @@ tests = [
         'mahotas.features.haralick(f)',
         None,
         'skimage.feature.greycoprops(skimage.feature.greycomatrix(f, [1], [0]))',
+        None,
         ]),
 ]
 if __name__ == '__main__':
@@ -94,7 +110,7 @@ if __name__ == '__main__':
             if st is None:
                 print '      NA &',
             else:
-                time = '%.2f' % (t(st)/base)
+                time = '%.1f' % (t(st)/base)
                 print '%8s &' % time,
         print r'\\'
 

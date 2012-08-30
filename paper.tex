@@ -323,21 +323,23 @@ and compute the minimum of this operation.
 
 \begin{table}
 \centering
-\begin{tabular}{lrr}
+\begin{tabular}{lrrrrr}
 \toprule
-Operation & mahotas & pymorphy\\
+Operation & mahotas & pymorph & scikits-image & OpenCV\\
 \midrule
-erode       &     9.90 &    13.06 \\
-dilate      &    10.48 &     8.17 \\
-open        &    20.26 &    21.05 \\
-cwatershed  &   181.47 & 50211.56 \\
-center mass &     6.39 &       NA \\
-daubechies  &    16.92 &       NA \\
-haralick    &   276.90 &       NA \\
+erode       &     12.2 &     14.4 &     41.9 &      0.4 & \\
+dilate      &     13.4 &      9.0 &     39.4 &      0.4 & \\
+open        &     25.6 &     23.4 &     81.3 &       NA & \\
+center mass &      7.1 &       NA &       NA &       NA & \\
+sobel       &     81.9 &       NA &    106.5 &      6.2 & \\
+cwatershed  &    194.8 &  56928.5 &    288.9 &     42.9 & \\
+daubechies  &     20.7 &       NA &       NA &       NA & \\
+haralick    &    326.9 &       NA &   7497.4 &       NA & \\
 \bottomrule
 \end{tabular}
-\caption{Efficiency Results for mahotas and pymorph. Shown are values as
-multiples of the time that \code{numpy.max(f)} takes.}
+\caption{Efficiency Results for mahotas, pymorph, scikits-image, and openCV
+(through Python wrappers). Shown are values as multiples of the time that
+\code{numpy.max(f)} takes.}
 \label{tab:efficiency}
 \end{table}
 
@@ -350,11 +352,21 @@ system (Intel 32~bits running Mac OS) were qualitatively similar (data not
 shown).
 
 The comparison is against Pymorph~\citep{DougLotu:03}, which is a pure Python
-implementation of some of the same functions. We can see that simple
-morphological operations (erosion, dilation, opening) take a similar amount of
-time in mahotas and pymorph (pymorph intelligently uses numpy operations for
-these). However, some more complex operations such as watershed are much faster
-in mahotas.
+implementation of some of the same functions; scikits-image, which is a similar
+project to mahotas, but with a heavier emphasis on the use of
+Cython~\citep{Cython}; and OpenCV, which is a \cpp{} library with automatically
+generated Python wrappers.
+
+OpenCV is the fastest library, but this comes at the cost of some flexibility.
+Arguments to its functions must be of the exact expected type and it is
+possible to crash the interpreter if types do match the expected type (in the
+other libraries, all types are checked and an exception is generated which can
+be caught by user code). This is particularly relevant for interactive use.
+
+Among the other libraries, mahotas is the fastest, except when comparing simple
+morphological operations with pymorph. Pymorph intelligently uses arithmetic
+operations for this operation and can be very fast. However, for more complex
+methods, such as watershed; its pure Python approach is very inefficient.
 
 \bigskip
 
