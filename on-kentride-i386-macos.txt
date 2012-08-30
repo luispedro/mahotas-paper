@@ -1,0 +1,8 @@
+erode       &    14.87 &    23.92 \\
+dilate      &    15.07 &    17.35 \\
+open        &    29.97 &    41.04 \\
+center mass &     6.67 &       NA \\
+cdcwatershed  &   203.86 & 90751.09 \\
+daubechies  &    21.33 &       NA \\
+haralick    &   276.72 &       NA \\
+
