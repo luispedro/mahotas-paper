@@ -50,7 +50,7 @@ markers32 = timethings.markers32
 '''
 
 def t(s):
-    return timeit.timeit(s, setup=pre, number=24)
+    return min(timeit.timeit(s, setup=pre, number=24) for i in xrange(3))
 
 tests = [
     ('erode', [
