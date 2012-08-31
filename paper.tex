@@ -474,8 +474,12 @@ other sources. Mahotas includes a full test suite. There are no known bugs.
 
 \subsection*{Acknowledgements}
 
-Mahotas includes code ported and incorporated from other projects. In
-particular, the \textsc{surf} implementation is a port from the code from
+Mahotas includes code ported and incorporated from other projects. Initially,
+it was used in reproducing the functionality in the Subcellular Location Image
+Classifier (SLIC) tool from Robert F.\ Murphy's
+Lab~\citep{springerlink:10.1007/978-0-387-45524-2_47} and the initial versions
+of mahotas were designed explicitly to support that functionality. The
+\textsc{surf} implementation is a port from the code from
 \textit{dlib},\footnote{Dlib's webpage is at \url{http://dlib.net}.} a very
 good \cpp{} library by Davis King. I also gleaned some insight into the
 implementation of these features from Christopher Evan's OpenSURF library and
@@ -491,10 +495,14 @@ local binary patterns implementation. Finally, I thank the several users who
 have reported bugs, submitted small fixes, and participated on the project
 mailing list.
 
-\textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
-Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and PTDC/SAU-GMG/115652/2008)
-and by a grant from the Siebel Scholars Foundation.
+Stéfan van der Walt and Andreas Müller offered helpful comments on a draft
+version of this manuscript.
 
+\textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
+Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and
+PTDC/SAU-GMG/115652/2008), by NIH grant GM078622 (to Robert F.\ Murphy), by a
+grant from the Scaife Foundation, by the HHMI Interface initial, and by a grant
+from the Siebel Scholars Foundation.
 
 \printbibliography
 \end{document}
