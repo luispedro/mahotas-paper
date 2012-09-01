@@ -52,18 +52,18 @@ Index (\url{http://pypi.python.org/pypi/mahotas}).
 \section{Introduction}
 
 Mahotas is a computer vision library for the Python Programming Language
-(versions 2.5 and up, including version 3). It operates on numpy
+(versions 2.5 and up, including version 3 and up). It operates on numpy
 arrays~\citep{numpystructure}. Therefore, it uses all the infrastructure built
 by that project for storing information and performing basic manipulations and
 computations. In particular, unlike libraries written in the C~Language or in
 Java~\citep{Marcel:2010:TMP:1873951.1874254}, Mahotas does not need to define a
-data structure, but uses the numpy array structure. Many basic manipulation
-functionality that would otherwise be part of a computer vision library are
-handled by numpy, for example computing averages and other simple statistics,
-handling multi-channel images, converting between types (integer and floating
-point images are supported by mahotas, whenever it is meaningful). For the
-user, this has the additional advantage that they do not need to learn yet
-another set of functions.
+new image data structure, but uses the numpy array structure. Many basic
+manipulation functionality that would otherwise be part of a computer vision
+library are handled by numpy, for example computing averages and other simple
+statistics, handling multi-channel images, converting between types (integer
+and floating point images are supported by mahotas). For the user, this has the
+additional advantage that they do not need to learn yet another set of
+functions.
 
 Additionally, by integrating into the Python numeric ecosystem, users can use
 other packages in a seamless way. In particular, mahotas does not implement any
@@ -77,12 +77,12 @@ balance between speed and ease of implementation.
 
 Version 1.0 of mahotas has been released recently and this is now a mature,
 well-tested package (the first version was made available over 4~years ago).
-\footnote{Note for reviewers: the version currently available implements all
-functionality described in this manuscript. I will release it as version 1.0
-when this manuscript is accepted to coincide with publication. Naturally, any
-bugs that are found and reported in the meanwhile will be addressed.} Mahotas
-runs and is used on different versions of Unix (including Linux, SunOS, and
-FreeBSD), Mac OS X, and Windows.
+\footnote{Note for reviewers: the version currently available (0.9.2)
+implements all functionality described in this manuscript. I will release it as
+version 1.0 when this manuscript is accepted to coincide with publication.
+Naturally, any bugs that are found and reported in the meanwhile will be
+addressed.} Mahotas runs and is used on different versions of Unix (including
+Linux, SunOS, and FreeBSD), Mac OS X, and Windows.
 
 \section{Implementation and Architecture}
 
@@ -107,7 +107,7 @@ complex operations built on these. There are both binary and grayscale
 implementations of these operators.
 \item[watershed] seeded watershed and distance map
 transforms~\citep{felzenszwalb}.
-\item[filtering] Gaussian filtering and general convolutions.
+\item[filtering] Gaussian filtering, edge finding, and general convolutions.
 \item[polygon operations] convex hull, polygon drawing.
 \end{description}
 
@@ -124,8 +124,8 @@ where the default is a $3 \times 3$ square).
 
 When a new image is to be returned, functions take an argument named \code{out}
 where the output will be stored. This argument is often much more restricted in
-type. In particular, it must often be a contiguous array.\footnote{Numpy
-supports non-contiguous arrays, which are most often slices into other, larger,
+type. In particular, it must be a contiguous array.\footnote{Numpy supports
+non-contiguous arrays, which are most often slices into other, larger,
 contiguous arrays (e.g., given a $128 \times 128$ contiguous array, one can
 build a $64 \times 128$ non-contiguous array by taking every other row).} Since
 this is a performance feature (its purpose is to avoid extra memory
@@ -235,8 +235,7 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
     PyArrayObject* output;
     if (!PyArg_ParseTuple(args, "OOO", &array, &Bc, &output) ||
         !numpy::are_arrays(array, Bc, output) || !numpy::same_shape(array, output) ||
-        !PyArray_EquivTypenums(PyArray_TYPE(array), PyArray_TYPE(Bc)) ||
-        !PyArray_EquivTypenums(PyArray_TYPE(array), PyArray_TYPE(output)) ||
+        !numpy::equiv_typenums(array, Bc, output) ||
         PyArray_NDIM(array) != PyArray_NDIM(Bc)
     ) {
         PyErr_SetString(PyExc_RuntimeError, TypeErrorMsg);
@@ -257,7 +256,7 @@ This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
 the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES()} macro, which call the right
 specialisation of the template that does the actual work. In this example
-\code{erode} implements (binary) erosion:
+\code{erode} implements erosion:
 
 \begin{cplusplus}
 template<typename T>
@@ -299,17 +298,18 @@ initialisation'' (\textsc{raii})\footnote{\textsc{Raii} is a design pattern in
 such as D, where a resource is represented by an object, whose constructor
 acquires it and whose destructor releases it. This guarantees that the object
 is correctly released even if the scope is left through an exception
-\citep{Stroustrup1994}.} object that release the Python global interpreter lock
+\citep{Stroustrup1994}.} object that releases the Python global interpreter lock
 (\textsc{gil})\footnote{In the CPython interpreter, the most commonly used
 implementation of Python, there is a global lock for many Python related
 functionality, which limits parallelism.} in its constructor and gets it back
 in its destructor. Normally, the template function will release the
 \textsc{gil} after the Python-specific code is done. This allows several
 mahotas functions to run concurrently.
-\item[\code{array}] This is a thin wrapper around \code{PyArrayObject} that
-knows its data type and has iterators which resemble the \cpp{} standard
-library. This makes the code type-safer. This is also a \textsc{raii} object in
-terms of managing Python reference counts.
+\item[\code{array}] This is a thin wrapper around \code{PyArrayObject}, the raw
+numpy data type, which has iterators which resemble the \cpp{} standard
+library. It also handles type-casting internally, making the code type-safer.
+This is also a \textsc{raii} object in terms of managing Python reference
+counts.
 \item[\code{filter\_iterator}] This is taken from \code{scipy.ndimage} and it
 is useful to iterate over an image and use a centered filter around each pixel
 (it keeps track of all of the boundary conditions).
@@ -348,7 +348,7 @@ does not support.}
 
 Table~\ref{tab:efficiency} shows timings for different operations. These were
 normalized to multiples of the time it takes to go over the image and find its
-maximum pixel value (this was done using \code{numpy.max(image}). The
+maximum pixel value (this was done using \code{numpy.max(image)}). The
 measurements shown were obtained on an Intel 64~bit system, running Ubuntu
 Linux. However, due to the normalization, measurements obtained on another
 system (Intel 32~bits running Mac OS) were qualitatively similar (data not
@@ -365,8 +365,8 @@ Arguments to its functions must be of the exact expected type and it is
 possible to crash the interpreter if types do match the expected type (in the
 other libraries, all types are checked and an exception is generated which can
 be caught by user code). This is particularly relevant for interactive use as
-the user is often exploring and is willing to pay the cost of a few extra type
-conversions to avoid a hard-crash.
+the user is often exploring and is willing to pay the speed cost of a few extra
+type conversions to avoid a hard-crash.
 
 Among the other libraries, mahotas is the fastest, except when comparing simple
 morphological operations with pymorph. Pymorph intelligently uses arithmetic
@@ -409,7 +409,7 @@ Mahotas works in Python (minimal version is~2.5 and works in all more recent
 versions, including in the Python~3 series).
 
 \textbf{Additional system requirements}\\
-None.
+None at runtime. Compilation from source requires a \cpp{} compiler.
 
 \textbf{Dependencies}\\
 It requires numpy to be present and installed.
@@ -430,7 +430,7 @@ California, Irvine), and Sandro Knauss (University of Bremen).
 \textit{Name}: Github\\
 \textit{Identifier}: https://github.com/luispedro/mahotas\\
 \textit{Licence}: MIT\\
-\textit{Date published}: Since 2009
+\textit{Date published}: Since 2010
 
 \section{Reuse Potential}
 
@@ -506,8 +506,8 @@ version of this manuscript.
 \textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
 Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and
 PTDC/SAU-GMG/115652/2008), by NIH grant GM078622 (to Robert F.\ Murphy), by a
-grant from the Scaife Foundation, by the HHMI Interface initial, and by a grant
-from the Siebel Scholars Foundation.
+grant from the Scaife Foundation, by the HHMI Interfaces Initiative, and by a
+grant from the Siebel Scholars Foundation.
 
 \printbibliography
 \end{document}
