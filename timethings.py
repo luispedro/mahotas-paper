@@ -27,6 +27,11 @@ Bc8 = Bc.astype(np.uint8)
 f3 = np.dstack([f,f,f])
 f3 = f3.astype(np.uint8)
 f3 = f3.copy()
+filt = np.array([
+    [1,0,-1,0],
+    [2,2,3,-2],
+    [-1,0,0,1]
+    ])
 markers32 = markers.astype(np.int32)
 
 pre ='''
@@ -47,12 +52,19 @@ Bc = timethings.Bc
 Bc8 = timethings.Bc8
 markers = timethings.markers
 markers32 = timethings.markers32
+filt = timethings.filt
 '''
 
 def t(s):
     return min(timeit.timeit(s, setup=pre, number=24) for i in xrange(3))
 
 tests = [
+    ('convolve', [
+        'mahotas.convolve(f, filt)',
+        None,
+        None,
+        None,
+        ]),
     ('erode', [
         'mahotas.erode(fbin, Bc)',
         'pymorph.erode(fbin, Bc)',
@@ -78,9 +90,9 @@ tests = [
         None,
         ]),
     ('sobel', [
-        'mahotas.sobel(f)',
+        'mahotas.sobel(f, just_filter=True)',
         None,
-        'skimage.filter.sobel(f64)',
+        'skimage.filter.sobel(f)',
         'cv2.Sobel(f, cv2.CV_32F, 1, 1)',
         ]),
     ('cwatershed', [
