@@ -235,7 +235,8 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
     PyArrayObject* Bc;
     PyArrayObject* output;
     if (!PyArg_ParseTuple(args, "OOO", &array, &Bc, &output) ||
-        !numpy::are_arrays(array, Bc, output) || !numpy::same_shape(array, output) ||
+        !numpy::are_arrays(array, Bc, output) ||
+        !numpy::same_shape(array, output) ||
         !numpy::equiv_typenums(array, Bc, output) ||
         PyArray_NDIM(array) != PyArray_NDIM(Bc)
     ) {
@@ -267,7 +268,8 @@ void erode(numpy::aligned_array<T> res,
     gil_release nogil;
     const int N = res.size();
     typename numpy::aligned_array<T>::iterator iter = array.begin();
-    filter_iterator<T> filter(array.raw_array(), Bc.raw_array(), EXTEND_NEAREST, is_bool(T()));
+    filter_iterator<T> filter(array.raw_array(), Bc.raw_array(),
+                    EXTEND_NEAREST, is_bool(T()));
     const int N2 = filter.size();
     T* rpos = res.data();
 
