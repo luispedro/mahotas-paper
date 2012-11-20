@@ -1,8 +1,9 @@
-\documentclass{article}
+\documentclass{scrartcl}
 \usepackage{hyperref}
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{python}
+\usepackage{fontspec}
 \usepackage[%
     natbib=true,%
     useprefix=true,
@@ -17,19 +18,26 @@
 \hypersetup{%
     bookmarks=true,
     colorlinks=true,
+    pdftitle={Mahotas: Open source software for scriptable computer vision},
     pdfauthor={Luis Pedro Coelho},
     citecolor=pondgreen,
     urlcolor=toastedchilipowder,
     linkcolor=toastedchilipowder,
 }
+\font\CodeFont="DejaVu Sans Mono" at 8pt
+\setmainfont[Mapping=tex-text]{Linux Libertine O}
 \newcommand*{\cpp}{{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny\textbf{++}}}}
-\let\code\texttt
+\def\code#1{\bgroup\CodeFont #1\egroup}
 \addbibresource{references.bib}
 
 \title{Mahotas: Open source software for scriptable computer vision}
 \author{Luis Pedro Coelho\\
 Lane Center for Computational Biology, Carnegie Mellon University\\
 Instituto de Medicina Molecular}
+\date{September 2012}
+
+
+
 
 \begin{document}
 \maketitle
@@ -44,8 +52,8 @@ The interface is in Python, a dynamic programming language, which is very
 appropriate for fast development, but the algorithms are implemented in \cpp{}
 and are tuned for speed.
 
-Mahotas is available under a liberal open source license (MIT License) and is
-available from \url{http://github.com/luispedro/mahotas} or the Python Package
+Mahotas is released under a liberal open source license (MIT License) and is
+available from \url{http://github.com/luispedro/mahotas} and from the Python Package
 Index (\url{http://pypi.python.org/pypi/mahotas}).
 
 \textbf{Keywords:} computer vision, image processing.
