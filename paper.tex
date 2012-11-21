@@ -3,18 +3,9 @@
 \usepackage{booktabs}
 \usepackage{tikz}
 \usepackage{python}
-\usepackage{fontspec}
-\usepackage[%
-    natbib=true,%
-    useprefix=true,
-    backend=biber,%
-    backref=true,%
-    citestyle=authoryear-comp,%
-    bibstyle=authoryear,%
-    maxbibnames=24,%
-    maxcitenames=2,%
-]{biblatex}
-
+\usepackage{libertine}
+\usepackage{DejaVuSansMono}
+\usepackage{natbib}
 \hypersetup{%
     bookmarks=true,
     colorlinks=true,
@@ -24,19 +15,17 @@
     urlcolor=toastedchilipowder,
     linkcolor=toastedchilipowder,
 }
-\font\CodeFont="DejaVu Sans Mono" at 8pt
-\setmainfont[Mapping=tex-text]{Linux Libertine O}
+
+
 \newcommand*{\cpp}{{C\nolinebreak[4]\hspace{-.05em}\raisebox{.4ex}{\tiny\textbf{++}}}}
-\def\code#1{\bgroup\CodeFont #1\egroup}
-\addbibresource{references.bib}
+\let\code\texttt
+\bibliographystyle{natbib}
 
 \title{Mahotas: Open source software for scriptable computer vision}
 \author{Luis Pedro Coelho\\
 Lane Center for Computational Biology, Carnegie Mellon University\\
 Instituto de Medicina Molecular}
 \date{September 2012}
-
-
 
 
 \begin{document}
@@ -264,7 +253,7 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
 
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
-the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES()} macro, which call the right
+the \code{SAFE\_\-SWITCH\_\-ON\_\-INTEGER\_\-TYPES()} macro, which call the right
 specialisation of the template that does the actual work. In this example
 \code{erode} implements erosion:
 
@@ -478,7 +467,7 @@ scientific software. For this platform, Mahotas is a fast library of computer
 vision and image processing functions. It is implemented in \cpp{}, as the
 standard Python interpreter is too slow for a direct Python implementation.
 However, all of the Python interface code is hand-written, as opposed to using
-automatic interface generators like Swig~\cite{Beazley2003599}. This is more
+automatic interface generators like Swig~\citep{Beazley2003599}. This is more
 work, but the end result is of much higher quality, especially when it comes to
 giving useful error messages (e.g., when a type mismatch occurs, an automatic
 system will often be forced to resort to a generic message as it does not have
@@ -521,5 +510,5 @@ PTDC/SAU-GMG/115652/2008), by NIH grant GM078622 (to Robert F.\ Murphy), by a
 grant from the Scaife Foundation, by the HHMI Interfaces Initiative, and by a
 grant from the Siebel Scholars Foundation.
 
-\printbibliography
+\bibliography{references}
 \end{document}
