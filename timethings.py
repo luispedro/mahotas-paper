@@ -34,6 +34,16 @@ filt = np.array([
     ])
 markers32 = markers.astype(np.int32)
 
+
+def octagon(r):
+    octagon = np.ones((r*2+1, r*2+1), dtype=np.bool)
+    lim = r//2
+    for y in xrange(lim):
+        octagon[y,:lim-y] = 0
+    octagon &= octagon[::-1]
+    octagon &= octagon[:,::-1]
+    return octagon
+
 pre ='''
 import skimage.filter
 import skimage.morphology
@@ -43,6 +53,7 @@ import mahotas
 import pymorph
 import cv2
 import timethings
+octagon = timethings.octagon
 f = timethings.f
 f3 = timethings.f3
 fbin = timethings.fbin
@@ -83,10 +94,22 @@ tests = [
         'skimage.morphology.opening(fbin8, Bc8)',
         None,
         ]),
+    ('median filter (2)', [
+        'mahotas.median_filter(f, octagon(2))',
+        None,
+        'skimage.filter.median_filter(f, 2)',
+        None,
+        ]),
+    ('median filter (10)', [
+        'mahotas.median_filter(f, octagon(10))',
+        None,
+        'skimage.filter.median_filter(f, 10)',
+        None,
+        ]),
     ('center mass', [
         'mahotas.center_of_mass(f)',
         None,
-        None,
+        'skimage.measure.regionprops(np.ones(f.shape, np.intc), ["WeightedCentroid"], intensity_image=f)',
         None,
         ]),
     ('sobel', [
@@ -117,12 +140,12 @@ tests = [
 if __name__ == '__main__':
     base = t('np.max(f)')
     for name,statements in tests:
-        print r'%-12s&' % name,
+        print r'{0:<20} &'.format(name),
         for st in statements:
             if st is None:
-                print '      NA &',
+                result = 'NA'
             else:
-                time = '%.1f' % (t(st)/base)
-                print '%8s &' % time,
+                result = '{:.1f}'.format( t(st)/base )
+            print '{0:>8} &'.format(result),
         print r'\\'
 
