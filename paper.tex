@@ -74,19 +74,19 @@ and floating point images are supported by mahotas). For the user, this has the
 additional advantage that they do not need to learn yet another set of
 functions.
 
-Additionally, by integrating into the Python numeric ecosystem, users can use
-other packages in a seamless way. In particular, mahotas does not implement any
-machine learning functionality, but rather advises the user to use another,
-specialised package, such as scikits-learn or milk.
-
 Python is a natural ``glue'' language: it is easy to use state-of-the-art
 libraries written in multiple languages~\citep{10.1109/MCSE.2007.58}. Mahotas
 itself is a mix of high-level Python and low-level \cpp{}. This achieves a good
 balance between speed and ease of implementation.
 
+Additionally, by integrating into the Python numeric ecosystem, users can use
+other packages in a seamless way. In particular, mahotas does not implement any
+machine learning functionality, but rather advises the user to use another,
+specialised, package, such as scikits-learn or milk.
+
 Version 1.0 of mahotas has been released recently and this is now a mature,
 well-tested package (the first version was made available over 4~years ago).
-\footnote{Note for reviewers: the version currently available (0.9.2)
+\footnote{Note for reviewers: the version currently available (0.9.6)
 implements all functionality described in this manuscript. I will release it as
 version 1.0 when this manuscript is accepted to coincide with publication.
 Naturally, any bugs that are found and reported in the meanwhile will be
@@ -218,10 +218,9 @@ the right SURF detections are represented as rectangles of different colours.}
 
 \subsection{Implementation}
 
-Mahotas is mostly written in \cpp, but this is completely hidden from the user
-as there are hand-written Python wrappers for all functions (automatically
-generated wrappers inevitably lead to worse error messages and are less
-flexible).
+The majority of functions in mahotas have an implementation in \cpp, and a
+hand-written Python wrapper. Automatically generated wrappers inevitably lead
+to worse error messages and are less flexible.
 
 The main reason that mahotas is implemented in \cpp{} (and not in C, which is
 the language of the Python interpreter) is to use templates. Almost \cpp{}
@@ -257,7 +256,7 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
     erode<type>(numpy::aligned_array<type>(output), \
                 numpy::aligned_array<type>(array), \
                 numpy::aligned_array<type>(Bc));
-    SAFE_SWITCH_ON_INTEGER_TYPES_OF(array, true);
+    SAFE_SWITCH_ON_INTEGER_TYPES_OF(array);
 #undef HANDLE
     ...
 \end{cplusplus}
@@ -265,8 +264,9 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
 the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES()} macro, which call the right
-specialisation of the template that does the actual work. In this example
-\code{erode} implements erosion:
+specialisation of the template that does the actual work. These macros will
+also take care of catching any \cpp{} exceptions and converting them to Python
+exceptions. In this example, \code{erode} implements erosion:
 
 \begin{cplusplus}
 template<typename T>
@@ -379,10 +379,11 @@ be caught by user code). This is particularly relevant for interactive use as
 the user is often exploring and is willing to pay the speed cost of a few extra
 type conversions to avoid a hard-crash.
 
-Among the other libraries, mahotas is the fastest, except when comparing simple
-morphological operations with pymorph. Pymorph intelligently uses arithmetic
-operations for this operation and can be very fast. However, for more complex
-methods, such as watershed; its pure Python approach is very inefficient.
+Among the other libraries, mahotas is the fastest, except for the case of a
+large median filter. For simple operations, pymorph intelligently uses
+arithmetic operations for this operation and can be very fast. However, for
+more complex methods, such as watershed; its pure Python approach is very
+inefficient. Skimage also uses compiled code to achieve fast results.
 
 \bigskip
 
@@ -397,7 +398,7 @@ Alternatively, Python based package managers (such as \texttt{easy\_install} or
 
 \subsection{Quality Control}
 
-Mahotas includes a complete automated suite of unit tests. These all
+Mahotas includes a complete automated suite of unit tests. These test all
 functionality and include several regression tests. There are no known bugs in
 version~1.0. In fact, no releases have ever been performed with known bugs.
 Naturally, bugs were, occasionally, discovered in released versions, but
@@ -424,7 +425,6 @@ None at runtime. Compilation from source requires a \cpp{} compiler.
 
 \textbf{Dependencies}\\
 It requires numpy to be present and installed.
-
 
 \textbf{List of contributors}\\
 Luis Pedro Coelho (Carnegie Mellon University and Instituto de Medicina
@@ -486,7 +486,7 @@ any knowledge of what the arguments mean besides their automatically inferred
 types).
 
 Mahotas has been available in the Python Package Index since April~2010 and has
-been downloaded over 20,000~times. This does not include any downloads from
+been downloaded over 35,000~times. This does not include any downloads from
 other sources. Mahotas includes a full test suite. There are no known bugs.
 
 \subsection*{Acknowledgements}
