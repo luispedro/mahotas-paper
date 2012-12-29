@@ -60,11 +60,11 @@ computations. In particular, unlike libraries written in the C~Language or in
 Java~\citep{Marcel:2010:TMP:1873951.1874254}, Mahotas does not need to define a
 new image data structure, but uses the numpy array structure. Many basic
 manipulation functionality that would otherwise be part of a computer vision
-library are handled by numpy, for example computing averages and other simple
+library are handled by numpy. For example, computing averages and other simple
 statistics, handling multi-channel images, converting between types (integer
-and floating point images are supported by mahotas). For the user, this has the
-additional advantage that they do not need to learn yet another set of
-functions.
+and floating point images are supported by mahotas) can all be performed with
+numpy builtin functionality. For the user, this has the additional advantage
+that they do not need to learn yet another set of functions.
 
 Additionally, by integrating into the Python numeric ecosystem, users can use
 other packages in a seamless way. In particular, mahotas does not implement any
@@ -78,7 +78,7 @@ balance between speed and ease of implementation.
 
 Version 1.0 of mahotas has been released recently and this is now a mature,
 well-tested package (the first version was made available over 4~years ago).
-\footnote{Note for reviewers: the version currently available (0.9.2)
+\footnote{Note for reviewers: the version currently available (0.9.6)
 implements all functionality described in this manuscript. I will release it as
 version 1.0 when this manuscript is accepted to coincide with publication.
 Naturally, any bugs that are found and reported in the meanwhile will be
@@ -102,7 +102,8 @@ includes both keypoint detection and descriptor computation.
 features, Zernike moments, local binary patterns, and threshold adjacency
 statistics (both the original~\citep{Hamilton2007} and the parameter-free
 versions~\citep{Coelho2010}).
-\item[wavelet] Haar and Daubechies wavelets. Forward and inverse transforms.
+\item[wavelet] Haar and Daubechies wavelets. Forward and inverse transforms are
+supported.
 \item[morphological functions] Erosion and dilation, as well as some more
 complex operations built on these. There are both binary and grayscale
 implementations of these operators.
@@ -120,8 +121,7 @@ There are a few interface conventions which apply to many functions. When
 meaningful, a structuring element is used to define neighbourhoods or adjacency
 relationships (morphological functions, in particular, use this convention).
 Generally, the default is to use a $3 \times 3$ cross as the default if no
-structuring filter is given (the exception to this rule is the median filter,
-where the default is a $3 \times 3$ square).
+structuring filter is given.
 
 When a new image is to be returned, functions take an argument named \code{out}
 where the output will be stored. This argument is often much more restricted in
@@ -135,10 +135,9 @@ contiguous array is much more efficient than a non-contiguous one).
 
 \subsection{Example of Use}
 
-This is a simple example of mahotas usage. Code for this and other examples is
-present in the mahotas source distribution under the \texttt{demos/} directory.
-In this example, we load an image and find SURF interest point and descriptors
-on it.
+Code for this and other examples is present in the mahotas source distribution
+under the \texttt{demos/} directory. In this example, we load an image and find
+SURF interest point and descriptors on it.
 
 We start by importing the necessary packages, including numpy and mahotas. We
 also use \textit{milk}, to demonstrate how the mahotas output can integrate
@@ -173,7 +172,7 @@ descrs = spoints[:,6:]
 values, _ = milk.kmeans(descrs, 5)
 \end{python}
 
-Finally, we can show the points in colour.
+Finally, we can show the points in different colours.
 \begin{python}
 colors = np.array(
     [ 255,  25,   1],
@@ -197,7 +196,8 @@ plt.imshow(f2)
 \end{python}
 
 The easy interaction with matplotlib is another way in which we benefit from
-the numpy-based ecosystem.
+the numpy-based ecosystem as mahotas does not need to support interacting with
+a graphical system to display images.
 
 \begin{figure}
 \begin{center}
@@ -249,14 +249,14 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
     erode<type>(numpy::aligned_array<type>(output), \
                 numpy::aligned_array<type>(array), \
                 numpy::aligned_array<type>(Bc));
-    SAFE_SWITCH_ON_INTEGER_TYPES_OF(array, true);
+    SAFE_SWITCH_ON_INTEGER_TYPES_OF(array);
 #undef HANDLE
     ...
 \end{cplusplus}
 
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
-the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES()} macro, which call the right
+the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES} macro, which call the right
 specialisation of the template that does the actual work. In this example
 \code{erode} implements erosion:
 
@@ -269,7 +269,7 @@ void erode(numpy::aligned_array<T> res,
     const int N = res.size();
     typename numpy::aligned_array<T>::iterator iter = array.begin();
     filter_iterator<T> filter(array.raw_array(), Bc.raw_array(),
-                    EXTEND_NEAREST, is_bool(T()));
+                    ExtendNearest, is_bool(T()));
     const int N2 = filter.size();
     T* rpos = res.data();
 
@@ -290,7 +290,8 @@ void erode(numpy::aligned_array<T> res,
 The template machinery makes the functions that use it very simple and easy to
 read. The only downside is that there is some expansion of code size when the
 compiler instantiates the function for the several integer and floating point
-types. Given the small size of these functions, this is not a big issue.
+types. Given the small size of these functions, the total size of the compiled
+library is reasonable (circa 6MiB on an Intel-based 64~bit system).
 
 In the snippet above, you can see some other \cpp{} machinery:
 
@@ -312,10 +313,12 @@ mahotas functions to run concurrently.
 numpy data type, which has iterators which resemble the \cpp{} standard
 library. It also handles type-casting internally, making the code type-safer.
 This is also a \textsc{raii} object in terms of managing Python reference
-counts.
-\item[\code{filter\_iterator}] This is taken from \code{scipy.ndimage} and it
-is useful to iterate over an image and use a centered filter around each pixel
-(it keeps track of all of the boundary conditions).
+counts. In mahotas debug builds, this object additionally adds several checks
+to all the memory acesses.
+\item[\code{filter\_iterator}] This was adapted from code in the
+\code{scipy.ndimage} packages and it is useful to iterate over an image and use
+a centered filter around each pixel (it keeps track of all of the boundary
+conditions).
 \end{description}
 
 The inner loop is as direct an implementation of erosion as one would wish for:
@@ -366,15 +369,15 @@ generated Python wrappers.
 OpenCV is the fastest library, but this comes at the cost of some flexibility.
 Arguments to its functions must be of the exact expected type and it is
 possible to crash the interpreter if types do match the expected type (in the
-other libraries, all types are checked and an exception is generated which can
-be caught by user code). This is particularly relevant for interactive use as
-the user is often exploring and is willing to pay the speed cost of a few extra
-type conversions to avoid a hard-crash.
+other libraries, including mahotas, all types are checked and an exception is
+generated which can be caught by user code). This is particularly relevant for
+interactive use as the user is often exploring and is willing to pay the speed
+cost of a few extra type conversions to avoid a hard-crash.
 
-Among the other libraries, mahotas is the fastest, except when comparing simple
-morphological operations with pymorph. Pymorph intelligently uses arithmetic
-operations for this operation and can be very fast. However, for more complex
-methods, such as watershed; its pure Python approach is very inefficient.
+Among the other libraries, mahotas is the fastest. Pymorph, even though it is
+implemented in Python only, intelligently uses arithmetic operations for this
+operation and can be very fast. However, for more complex methods, such as
+watershed; its pure Python approach is very inefficient.
 
 \bigskip
 
@@ -389,7 +392,7 @@ Alternatively, Python based package managers (such as \texttt{easy\_install} or
 
 \subsection{Quality Control}
 
-Mahotas includes a complete automated suite of unit tests. These all
+Mahotas includes a complete automated suite of unit tests, which tests all
 functionality and include several regression tests. There are no known bugs in
 version~1.0. In fact, no releases have ever been performed with known bugs.
 Naturally, bugs were, occasionally, discovered in released versions, but
@@ -448,7 +451,6 @@ publications~\citep{omerosearcher}. Other groups have used in published work,
 both in cell image analysis~\citep{CYTO:CYTO22034} and in other
 areas~\citep{springerlink:10.1007/978-3-642-32335-5_2}.
 
-
 \section{Discussion}
 
 Python is an excellent language for scientific programming because of the
@@ -457,8 +459,9 @@ been built around the numpy project. Mahotas works in this environment to
 provide the user with image analysis and computer vision functionality.
 
 Mahotas does not include machine learning related functionality, such as
-$k$-means clustering or any classification. This is the result of an explicit
-design decision. Specialised machine learning packages for Python already
+$k$-means clustering or classification methods. This is the result of an
+explicit design decision. Specialised machine learning packages for Python
+already
 exist~\citep{Pedregosa:2011:SML:2078183.2078195,springerlink:10.1007/978-3-540-30116-5_58,Schaul:2010:PYB:1756006.1756030,Sonnenburg:2010:SML:1756006.1859911}.
 A good classification (or other) system can benefit both computer vision users
 and others. As these projects all use Numpy arrays as their data types, it is
@@ -470,15 +473,15 @@ scientific software. For this platform, Mahotas is a fast library of computer
 vision and image processing functions. It is implemented in \cpp{}, as the
 standard Python interpreter is too slow for a direct Python implementation.
 However, all of the Python interface code is hand-written, as opposed to using
-automatic interface generators like Swig~\cite{Beazley2003599}. This is more
-work, but the end result is of much higher quality, especially when it comes to
-giving useful error messages (e.g., when a type mismatch occurs, an automatic
-system will often be forced to resort to a generic message as it does not have
-any knowledge of what the arguments mean besides their automatically inferred
-types).
+automatic interface generators like Swig~\citep{Beazley2003599}. This is more
+work intially, but the end result is of much higher quality, especially when it
+comes to giving useful error messages (e.g., when a type mismatch occurs, an
+automatic system will often be forced to resort to a generic message as it does
+not have any knowledge of what the arguments mean besides their automatically
+inferred types).
 
 Mahotas has been available in the Python Package Index since April~2010 and has
-been downloaded over 20,000~times. This does not include any downloads from
+been downloaded over 40,000~times. This does not include any downloads from
 other sources. Mahotas includes a full test suite. There are no known bugs.
 
 \subsection*{Acknowledgements}
