@@ -227,8 +227,11 @@ check them.
 performing the actual operation.
 \end{enumerate}
 
-So, for example, this is how \emph{erode} is implemented. \code{py\_erode}
-consists mostly of boiler-plate code:
+So, for example, this is how \emph{erode} is implemented.\footnote{This is the
+generic version of the code. Erode, like a few other functions, has two
+versions, a fast version, limited to two-dimensional, contiguous, images and a
+generic one presented here.} \code{py\_erode} consists mostly of boiler-plate
+code:
 
 \begin{cplusplus}
 PyObject* py_erode(PyObject* self, PyObject* args) {
@@ -334,14 +337,16 @@ and compute the minimum of this operation.
 \toprule
 Operation & mahotas & pymorph & scikits-image & OpenCV\\
 \midrule
-erode       &     10.3 &     14.2 &     41.5 &      0.4 & \\
-dilate      &     12.7 &      8.9 &     38.9 &      0.4 & \\
-open        &     23.0 &     23.3 &     80.8 &       NA & \\
-center mass &      7.1 &       NA &       NA &       NA & \\
-sobel       &     75.4 &       NA &    105.4 &      6.2 & \\
-cwatershed  &    191.3 &  60410.0 &    285.0 &     42.1 & \\
-daubechies  &     20.3 &       NA &       NA &       NA & \\
-haralick    &    304.5 &       NA &   7615.8 &       NA & \\
+erode                &      1.6 &     15.1 &      7.4 &      0.4 & \\
+dilate               &      1.5 &      9.1 &      7.3 &      0.4 & \\
+open                 &      3.2 &     24.3 &     14.8 &       NA & \\
+median filter (2)    &    226.9 &       NA &   2034.0 &       NA & \\
+median filter (10)   &   2810.9 &       NA &   1877.1 &       NA & \\
+center mass          &      5.0 &       NA &   3611.2 &       NA & \\
+sobel                &     34.1 &       NA &     62.5 &      6.2 & \\
+cwatershed           &    174.8 &  58440.3 &    287.3 &     44.9 & \\
+daubechies           &     18.8 &       NA &       NA &       NA & \\
+haralick             &    233.1 &       NA &   7760.7 &       NA & \\
 \bottomrule
 \end{tabular}
 \caption{Efficiency Results for mahotas, pymorph, scikits-image, and openCV
@@ -349,7 +354,8 @@ haralick    &    304.5 &       NA &   7615.8 &       NA & \\
 \code{numpy.max(image)} takes to compute the maximum pixel value in the image
 (all operations are over the same image). For scikits-image, features on the
 grey-scale cooccurrence matrix were used instead of Haralick features, which it
-does not support.}
+does not support. In the case of \emph{median filter}, the radius of the
+structuring element is shown in parentheses.}
 \label{tab:efficiency}
 \end{table}
 
@@ -378,7 +384,10 @@ cost of a few extra type conversions to avoid a hard-crash.
 Among the other libraries, mahotas is the fastest. Pymorph, even though it is
 implemented in Python only, intelligently uses arithmetic operations for this
 operation and can be very fast. However, for more complex methods, such as
-watershed; its pure Python approach is very inefficient.
+watershed; its pure Python approach is very inefficient. The one exception is
+that median filtering with a large structuring element is faster in
+scikit-image. In fact, that library uses an algorithm with better asymptotic
+behavior for this operation.
 
 \bigskip
 
@@ -412,8 +421,8 @@ platform.}
 
 
 \textbf{Programming language}\\
-Mahotas works in Python (minimal version is~2.5 and works in all more recent
-versions, including in the Python~3 series).
+Mahotas works in Python (minimal version is~2.5, but mahotas works with all
+more recent versions, including version in the Python~3 series).
 
 \textbf{Additional system requirements}\\
 None at runtime. Compilation from source requires a \cpp{} compiler.
@@ -438,8 +447,8 @@ of Bremen).
 \textit{Name}: Github\\
 \textit{Identifier}: https://github.com/luispedro/mahotas\\
 \textit{Licence}: MIT\\
-\textit{Date published}: Since 2010. Some of the code had been previously made
-available under other names.
+\textit{Date published}: Since 2010 as mahotas. Some of the code had been
+previously made available under other names.
 
 \section{Reuse Potential}
 
