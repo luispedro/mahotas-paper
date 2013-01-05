@@ -39,7 +39,9 @@ interest point detection and local descriptors.
 
 The interface is in Python, a dynamic programming language, which is very
 appropriate for fast development, but the algorithms are implemented in \cpp{}
-and are tuned for speed.
+and are tuned for speed. The library is designed to fit in with the scientific
+software ecosystem in this language and can leverage the existing
+infrastructure developed in that language.
 
 Mahotas is released under a liberal open source license (MIT License) and is
 available from \url{http://github.com/luispedro/mahotas} and from the Python Package
@@ -63,10 +65,13 @@ and floating point images are supported by mahotas) can all be performed with
 numpy builtin functionality. For the user, this has the additional advantage
 that they do not need to learn yet another set of functions.
 
-Additionally, by integrating into the Python numeric ecosystem, users can use
-other packages in a seamless way. In particular, mahotas does not implement any
-machine learning functionality, but rather advises the user to use another,
-specialised package, such as scikits-learn or milk.
+It contains over 100~functions with functionality ranging from traditional
+image filtering and morphological operations to more modern wavelet
+decompositions and local feature computations. Additionally, by integrating
+into the Python numeric ecosystem, users can use other packages in a seamless
+way. In particular, mahotas does not implement any machine learning
+functionality, but rather advises the user to use another, specialised package,
+such as scikits-learn or milk.
 
 Python is a natural ``glue'' language: it is easy to use state-of-the-art
 libraries written in multiple languages~\citep{10.1109/MCSE.2007.58}. Mahotas
@@ -94,24 +99,27 @@ level, but this is hidden from the user).
 The main functionality is grouped into the following categories:
 
 \begin{description}
-\item[\textsc{surf}] Speeded-up Robust Features~\citep{eth_biwi_00517}. This
+\item[\textsc{Surf}] Speeded-up Robust Features~\citep{eth_biwi_00517}. This
 includes both keypoint detection and descriptor computation.
-\item[features] Global feature descriptors. In particular, Haralick texture
+\item[Features] Global feature descriptors. In particular, Haralick texture
 features, Zernike moments, local binary patterns, and threshold adjacency
 statistics (both the original~\citep{Hamilton2007} and the parameter-free
 versions~\citep{Coelho2010}).
-\item[wavelet] Haar and Daubechies wavelets. Forward and inverse transforms are
+\item[Wavelet] Haar and Daubechies wavelets. Forward and inverse transforms are
 supported.
-\item[morphological functions] Erosion and dilation, as well as some more
+\item[Morphological functions] Erosion and dilation, as well as some more
 complex operations built on these. There are both binary and grayscale
 implementations of these operators.
-\item[watershed] seeded watershed and distance map
+\item[Watershed] seeded watershed and distance map
 transforms~\citep{felzenszwalb}.
-\item[filtering] Gaussian filtering, edge finding, and general convolutions.
-\item[polygon operations] convex hull, polygon drawing.
+\item[Filtering] Gaussian filtering, edge finding, and general convolutions.
+\item[Polygon operations] convex hull, polygon drawing.
 \end{description}
 
-In general, functions operate on all data types. This is performed without any
+Numpy arrays contain data of a specific type, such \code{unsigned 8 bit
+integer} or floating point numbers. While natural colour images are typically
+8~bits, scientific data is often larger and processing can result in floating
+point images. Mahotas works on all datatypes. This is performed without any
 extra memory copies. Mahotas is heavily optimised for both speed and memory
 usage (it can be used with very large arrays).
 
@@ -134,8 +142,8 @@ contiguous array is much more efficient than a non-contiguous one).
 \subsection{Example of Use}
 
 Code for this and other examples is present in the mahotas source distribution
-under the \texttt{demos/} directory. In this example, we load an image and find
-SURF interest point and descriptors on it.
+under the \texttt{demos/} directory. In this example, we load an image, find
+SURF interest points, and compute descriptors.
 
 We start by importing the necessary packages, including numpy and mahotas. We
 also use \textit{milk}, to demonstrate how the mahotas output can integrate
@@ -162,11 +170,17 @@ We can now compute SURF interest points and descriptors.
 spoints = surf.surf(f, 4, 6, 2)
 \end{python}
 
-Using numpy operations and milk, we can select only the descriptors and cluster
-them into a group of five:
+The \code{surf.surf} function returns both the descriptors and their meta data.
+We use numpy operations to retain only the descriptors (the meta data is in the
+first five positions):
 
 \begin{python}
 descrs = spoints[:,6:]
+\end{python}
+
+Using milk, we cluster the descriptors into five groups:
+
+\begin{python}
 values, _ = milk.kmeans(descrs, 5)
 \end{python}
 
@@ -209,9 +223,9 @@ the right SURF detections are represented as rectangles of different colours.}
 \subsection{Implementation}
 
 Mahotas is mostly written in \cpp, but this is completely hidden from the user
-as there are hand-written Python wrappers for all functions (automatically
+as there are hand-written Python wrappers for all functions. Automatically
 generated wrappers inevitably lead to worse error messages and are less
-flexible).
+flexible.
 
 The main reason that mahotas is implemented in \cpp{} (and not in C, which is
 the language of the Python interpreter) is to use templates. Almost \cpp{}
@@ -227,8 +241,9 @@ performing the actual operation.
 So, for example, this is how \emph{erode} is implemented.\footnote{This is the
 generic version of the code. Erode, like a few other functions, has two
 versions, a fast version, limited to two-dimensional, contiguous, images and a
-generic one presented here.} \code{py\_erode} consists mostly of boiler-plate
-code:
+generic one presented here. The selection between the two implementations is
+done automatically for the user.} \code{py\_erode} consists mostly of
+boiler-plate code:
 
 \begin{cplusplus}
 PyObject* py_erode(PyObject* self, PyObject* args) {
@@ -257,7 +272,7 @@ PyObject* py_erode(PyObject* self, PyObject* args) {
 
 This functions retrieves the arguments, performs some sanity checks, performs a
 bit of initialisation, and finally, switches in the input type with the help of
-the \code{SAFE\_SWITCH\_ON\_INTEGER\_TYPES} macro, which call the right
+the \code{SAFE\_\-SWITCH\_\-ON\_\-INTEGER\_\-TYPES} macro, which call the right
 specialisation of the template that does the actual work. In this example
 \code{erode} implements erosion:
 
@@ -292,7 +307,8 @@ The template machinery makes the functions that use it very simple and easy to
 read. The only downside is that there is some expansion of code size when the
 compiler instantiates the function for the several integer and floating point
 types. Given the small size of these functions, the total size of the compiled
-library is reasonable (circa 6MiB on an Intel-based 64~bit system).
+library is reasonable (circa 6MiB on an Intel-based 64~bit system for the whole
+library).
 
 In the snippet above, you can see some other \cpp{} machinery:
 
@@ -330,20 +346,20 @@ and compute the minimum of this operation.
 
 \begin{table}
 \centering
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Operation & mahotas & pymorph & scikits-image & OpenCV\\
+Operation            &  mahotas &  pymorph & scikits-image & OpenCV \\
 \midrule
-erode                &      1.6 &     15.1 &      7.4 &      0.4 & \\
-dilate               &      1.5 &      9.1 &      7.3 &      0.4 & \\
-open                 &      3.2 &     24.3 &     14.8 &       NA & \\
-median filter (2)    &    226.9 &       NA &   2034.0 &       NA & \\
-median filter (10)   &   2810.9 &       NA &   1877.1 &       NA & \\
-center mass          &      5.0 &       NA &   3611.2 &       NA & \\
-sobel                &     34.1 &       NA &     62.5 &      6.2 & \\
-cwatershed           &    174.8 &  58440.3 &    287.3 &     44.9 & \\
-daubechies           &     18.8 &       NA &       NA &       NA & \\
-haralick             &    233.1 &       NA &   7760.7 &       NA & \\
+erode                &      1.6 &     15.1 &      7.4 &      0.4  \\
+dilate               &      1.5 &      9.1 &      7.3 &      0.4  \\
+open                 &      3.2 &     24.3 &     14.8 &       NA  \\
+median filter (2)    &    226.9 &       NA &   2034.0 &       NA  \\
+median filter (10)   &   2810.9 &       NA &   1877.1 &       NA  \\
+center mass          &      5.0 &       NA &   3611.2 &       NA  \\
+sobel                &     34.1 &       NA &     62.5 &      6.2  \\
+cwatershed           &    174.8 &  58440.3 &    287.3 &     44.9  \\
+daubechies           &     18.8 &       NA &       NA &       NA  \\
+haralick             &    233.1 &       NA &   7760.7 &       NA  \\
 \bottomrule
 \end{tabular}
 \caption{Efficiency Results for mahotas, pymorph, scikits-image, and openCV
@@ -352,17 +368,15 @@ haralick             &    233.1 &       NA &   7760.7 &       NA & \\
 (all operations are over the same image). For scikits-image, features on the
 grey-scale cooccurrence matrix were used instead of Haralick features, which it
 does not support. In the case of \emph{median filter}, the radius of the
-structuring element is shown in parentheses.}
-\label{tab:efficiency}
-\end{table}
+structuring element is shown in parentheses. NA stands for ``Not Available.''}
+\label{tab:efficiency} \end{table}
 
 Table~\ref{tab:efficiency} shows timings for different operations. These were
 normalized to multiples of the time it takes to go over the image and find its
 maximum pixel value (this was done using \code{numpy.max(image)}). The
 measurements shown were obtained on an Intel 64~bit system, running Ubuntu
 Linux. However, due to the normalization, measurements obtained on another
-system (Intel 32~bits running Mac OS) were qualitatively similar (data not
-shown).
+system (Intel 32~bits running Mac OS) were qualitatively similar.
 
 The comparison is against Pymorph~\citep{DougLotu:03}, which is a pure Python
 implementation of some of the same functions; scikits-image, which is a similar
@@ -376,17 +390,17 @@ possible to crash the interpreter if types do match the expected type (in the
 other libraries, including mahotas, all types are checked and an exception is
 generated which can be caught by user code). This is particularly relevant for
 interactive use as the user is often exploring and is willing to pay the speed
-cost of a few extra type conversions to avoid a hard-crash.
+cost of a few extra type checks and conversions to avoid a hard-crash.
 
 Among the other libraries, mahotas is the fastest. Pymorph, even though it is
-implemented in Python only, intelligently uses arithmetic operations for this
-operation and can be very fast. However, for more complex methods, such as
-watershed; its pure Python approach is very inefficient. The one exception is
-that median filtering with a large structuring element is faster in
-scikit-image. In fact, that library uses an algorithm with better asymptotic
-behavior for this operation.
+implemented in Python only, intelligently uses arithmetic operations for
+morphological operation and can be very fast. However, for more complex
+methods, such as watershed; its pure Python approach is very inefficient. The
+one exception is that median filtering with a large structuring element is
+faster in scikit-image. In fact, that library uses an algorithm with better
+asymptotic behavior for this operation.
 
-\bigskip
+\subsection{Distribution and Installation}
 
 In keeping with the philosophy of blending in with the ecosystem, Mahotas uses
 the standard Python build machinery and distribution channels. Building and
@@ -471,22 +485,19 @@ $k$-means clustering or classification methods. This is the result of an
 explicit design decision. Specialised machine learning packages for Python
 already
 exist~\citep{Pedregosa:2011:SML:2078183.2078195,springerlink:10.1007/978-3-540-30116-5_58,Schaul:2010:PYB:1756006.1756030,Sonnenburg:2010:SML:1756006.1859911}.
-A good classification (or other) system can benefit both computer vision users
+A good classification system can benefit both computer vision users
 and others. As these projects all use Numpy arrays as their data types, it is
 easy to use functionality from the different project seamlessly (no copying of
 data is necessary).
 
-Python is an ideal language for fast development of both applications and
-scientific software. For this platform, Mahotas is a fast library of computer
-vision and image processing functions. It is implemented in \cpp{}, as the
-standard Python interpreter is too slow for a direct Python implementation.
-However, all of the Python interface code is hand-written, as opposed to using
-automatic interface generators like Swig~\citep{Beazley2003599}. This is more
-work intially, but the end result is of much higher quality, especially when it
-comes to giving useful error messages (e.g., when a type mismatch occurs, an
-automatic system will often be forced to resort to a generic message as it does
-not have any knowledge of what the arguments mean besides their automatically
-inferred types).
+Mahotas is implemented in \cpp{}, as the standard Python interpreter is too
+slow for a direct Python implementation. However, all of the Python interface
+code is hand-written, as opposed to using automatic interface generators like
+Swig~\citep{Beazley2003599}. This is more work initially, but the end result is
+of much higher quality, especially when it comes to giving useful error
+messages (e.g., when a type mismatch occurs, an automatic system will often be
+forced to resort to a generic message as it does not have any knowledge of what
+the arguments mean besides their automatically inferred types).
 
 Mahotas has been available in the Python Package Index since April~2010 and has
 been downloaded over 40,000~times. This does not include any downloads from
@@ -512,10 +523,10 @@ project. All of these contributions were integrated while respecting the
 software licenses under which the original code had been released. Robert Webb,
 a summer student at Carnegie Mellon University, worked with me on the initial
 local binary patterns implementation. Finally, I thank the several users who
-have reported bugs, submitted small fixes, and participated on the project
+have reported bugs, submitted fixes, and participated on the project
 mailing list.
 
-Stéfan van der Walt and Andreas Müller offered helpful comments on a draft
+St\'efan van der Walt and Andreas M\"uller offered helpful comments on a draft
 version of this manuscript.
 
 \textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
