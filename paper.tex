@@ -443,7 +443,8 @@ more recent versions, including version in the Python~3 series).
 None at runtime. Compilation from source requires a \cpp{} compiler.
 
 \textbf{Dependencies}\\
-It requires numpy to be present and installed.
+At runtime, mahotas requires numpy to be present and installed. If compiling
+from source, the Python headers and a \cpp{} compiler is required.
 
 
 \textbf{List of contributors}\\
@@ -468,14 +469,15 @@ previously made available under other names.
 \section{Reuse Potential}
 
 Originally, this code was developed in the context of cellular image analysis.
-However, none of the functionality is specific to this context and many
-computer vision pipelines can make use of it.
+However, the code was designed so that mahotas would contain functionality that
+is not specific to cell image analysis and many computer vision pipelines can
+make use of it.
 
-This package (and earlier versions of it) have been used by
+This package (or earlier versions of it) have been used by
 myself~\citep{Coelho2009,Coelho2010a} and close collaborators in several
-publications~\citep{omerosearcher}. Other groups have used in published work,
-both in cell image analysis~\citep{CYTO:CYTO22034} and in other
-areas~\citep{springerlink:10.1007/978-3-642-32335-5_2}.
+publications~\citep{omerosearcher}. Other groups have used it in published
+work, both in cell image analysis~\citep{CYTO:CYTO22034} and in other
+areas~\citep{springerlink:10.1007/978-3-642-32335-5_2,ADFM:ADFM201300091}.
 
 \section{Discussion}
 
