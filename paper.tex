@@ -45,7 +45,8 @@ infrastructure developed in that language.
 
 Mahotas is released under a liberal open source license (MIT License) and is
 available from \url{http://github.com/luispedro/mahotas} and from the Python Package
-Index (\url{http://pypi.python.org/pypi/mahotas}).
+Index (\url{http://pypi.python.org/pypi/mahotas}). Tutorials and full API
+documentation is available online at \url{http://mahotas.readthedocs.org/}.
 
 \textbf{Keywords:} computer vision, image processing.
 
@@ -80,11 +81,7 @@ balance between speed and ease of implementation.
 
 Version 1.0 of mahotas has been released recently and this is now a mature,
 well-tested package (the first versions were made available over 4~years ago,
-although the package was not named mahotas then). \footnote{Note for reviewers:
-the version currently available (0.9.6) implements all functionality described
-in this manuscript. I will release it as version 1.0 when this manuscript is
-accepted to coincide with publication. Naturally, any bugs that are found and
-reported in the meanwhile will be addressed.} Mahotas runs and is used on
+although the package was not named mahotas then). Mahotas runs and is used on
 different versions of Unix (including Linux, SunOS, and FreeBSD), Mac OS X, and
 Windows.
 
@@ -415,6 +412,10 @@ Alternatively, Python based package managers (such as \texttt{easy\_install} or
 For compiling from source, a \cpp{} compiler is needed, as well as the
 development headers for Python and numpy.
 
+There are binary packages available for Windows, maintained by Christoph
+Gohlke, and for FreeBSD and Linux Frugalware through their respective package
+systems.
+
 \subsection{Quality Control}
 
 Mahotas includes a complete automated suite of unit tests, which tests all
@@ -440,12 +441,11 @@ Mahotas works in Python (minimal version is~2.5, but mahotas works with all
 more recent versions, including version in the Python~3 series).
 
 \textbf{Additional system requirements}\\
-None at runtime. Compilation from source requires a \cpp{} compiler.
+None at runtime. Compilation from source requires a \cpp{} compiler and the
+Python development headers.
 
 \textbf{Dependencies}\\
-At runtime, mahotas requires numpy to be present and installed. If compiling
-from source, the Python headers and a \cpp{} compiler is required.
-
+At runtime, mahotas requires numpy to be present and installed.
 
 \textbf{List of contributors}\\
 Luis Pedro Coelho (Carnegie Mellon University and Instituto de Medicina
