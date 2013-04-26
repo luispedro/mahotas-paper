@@ -144,14 +144,14 @@ under the \texttt{demos/} directory. In this example, we load an image, find
 SURF interest points, and compute descriptors.
 
 We start by importing the necessary packages, including numpy and mahotas. We
-also use \textit{milk}, to demonstrate how the mahotas output can integrate
+also use \textit{scipy.cluster}, to demonstrate how the mahotas output can integrate
 with a machine learning package.
 
 \begin{python}
 import numpy as np
 import mahotas
 from mahotas.features import surf
-import milk
+from scipy.cluster import vq
 \end{python}
 
 The first step is to load the image and convert to 8~bit numbers. In this
@@ -176,10 +176,11 @@ first five positions):
 descrs = spoints[:,6:]
 \end{python}
 
-Using milk, we cluster the descriptors into five groups:
-
+Using \code{scipy.cluster.vq}, we cluster the descriptors into five groups. The
+function \code{kmeans2} returns two values: the centroids, which we ignore; and
+the cluster ids, which we will use below to assign colours:
 \begin{python}
-values, _ = milk.kmeans(descrs, 5)
+_,cids = vq.kmeans2(vq.whiten(descrs), 5)
 \end{python}
 
 Finally, we can show the points in different colours.
@@ -190,7 +191,7 @@ colors = np.array([
     [151, 129,  56],
     [ 99, 181,  52],
     [ 47, 233,   5]])
-f2 = surf.show_surf(f, spoints[:64], values, colors)
+f2 = surf.show_surf(f, spoints[:64], cids, colors)
 \end{python}
 
 The \texttt{show\_surf} only builds the image as a multi-channel (one for each
