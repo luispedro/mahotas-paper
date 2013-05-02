@@ -151,17 +151,20 @@ with a machine learning package.
 
 \begin{python}
 import numpy as np
-import mahotas
+import mahotas as mh
 from mahotas.features import surf
 from scipy.cluster import vq
 \end{python}
 
 The first step is to load the image and convert to 8~bit numbers. In this
 case, the conversion is done using standard numpy methods, namely
-\code{astype}:
+\code{astype}. We use the function \code{mahotas.demos.image\_path} to access a
+demonstration image.
 
 \begin{python}
-f = mahotas.imread('luispedro.jpg', as_grey=True)
+import mahotas.demos
+impath = mh.demos.image_path('luispedro.jpg')
+f = mh.imread(impath, as_grey=True)
 f = f.astype(np.uint8)
 \end{python}
 
