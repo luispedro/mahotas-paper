@@ -65,10 +65,10 @@ manipulation functionality that would otherwise be part of a computer vision
 library are handled by numpy. For example, computing averages and other simple
 statistics, handling multi-channel images, converting between types (integer
 and floating point images are supported by mahotas) can all be performed with
-numpy builtin functionality. For the user, this has the additional advantage
-that they do not need to learn yet another set of functions.
+numpy builtin functionality. For the users, this has the additional advantage
+that they do not need to learn new interfaces.
 
-It contains over 100~functions with functionality ranging from traditional
+Mahotas contains over 100~functions with functionality ranging from traditional
 image filtering and morphological operations to more modern wavelet
 decompositions and local feature computations. Additionally, by integrating
 into the Python numeric ecosystem, users can use other packages in a seamless
@@ -118,10 +118,12 @@ transforms~\citep{felzenszwalb}.
 
 Numpy arrays contain data of a specific type, such \code{unsigned 8 bit
 integer} or floating point numbers. While natural colour images are typically
-8~bits, scientific data is often larger and processing can result in floating
-point images. Mahotas works on all datatypes. This is performed without any
-extra memory copies. Mahotas is heavily optimised for both speed and memory
-usage (it can be used with very large arrays).
+8~bits, scientific data is often larger (12 and 16~bit formats are common).
+Processing can generate floating point images, for example, subtracting the
+mean value to every pixel; the mean will be a floating point number even if the
+original image was integral. Mahotas works on all datatypes. This is performed
+without any extra memory copies. Mahotas is heavily optimised for both speed
+and memory usage (it can be used with very large arrays).
 
 There are a few interface conventions which apply to many functions. When
 meaningful, a structuring element is used to define neighbourhoods or adjacency
@@ -146,8 +148,8 @@ under the \texttt{demos/} directory. In this example, we load an image, find
 SURF interest points, and compute descriptors.
 
 We start by importing the necessary packages, including numpy and mahotas. We
-also use \textit{scipy.cluster}, to demonstrate how the mahotas output can integrate
-with a machine learning package.
+also use \code{scipy.cluster}, to demonstrate how the mahotas output can
+integrate with a machine learning package.
 
 \begin{python}
 import numpy as np
@@ -188,7 +190,9 @@ the cluster ids, which we will use below to assign colours:
 _,cids = vq.kmeans2(vq.whiten(descrs), 5)
 \end{python}
 
-Finally, we can show the points in different colours.
+Finally, we can show the points in different colours. In order to avoid a very
+cluttered image, we will only plot the first 64~regions.
+
 \begin{python}
 colors = np.array([
     [ 255,  25,   1],
@@ -213,8 +217,8 @@ plt.show()
 \end{python}
 
 The easy interaction with matplotlib is another way in which we benefit from
-the numpy-based ecosystem as mahotas does not need to support interacting with
-a graphical system to display images.
+the numpy-based ecosystem. Mahotas does not need to support interacting with a
+graphical system to display images.
 
 \begin{figure}
 \begin{center}
@@ -247,7 +251,7 @@ So, for example, this is how \emph{erode} is implemented.\footnote{This is the
 generic version of the code. Erode, like a few other functions, has two
 versions, a fast version, limited to two-dimensional, contiguous, images and a
 generic one presented here. The selection between the two implementations is
-done automatically for the user.} \code{py\_erode} consists mostly of
+done automatically.} \code{py\_erode} consists mostly of
 boiler-plate code:
 
 \begin{cplusplus}
@@ -327,7 +331,8 @@ is correctly released even if the scope is left through an exception
 \citep{Stroustrup1994}.} object that releases the Python global interpreter lock
 (\textsc{gil})\footnote{In the CPython interpreter, the most commonly used
 implementation of Python, there is a global lock for many Python related
-functionality, which limits parallelism.} in its constructor and gets it back
+functionality, which limits parallelism. By releasing the \textsc{gil}, mahotas
+allows another thread to run concurrently.} in its constructor and gets it back
 in its destructor. Normally, the template function will release the
 \textsc{gil} after the Python-specific code is done. This allows several
 mahotas functions to run concurrently.
@@ -378,10 +383,10 @@ structuring element is shown in parentheses. NA stands for ``Not Available.''}
 
 Table~\ref{tab:efficiency} shows timings for different operations. These were
 normalized to multiples of the time it takes to go over the image and find its
-maximum pixel value (this was done using \code{numpy.max(image)}). The
+maximum pixel value (using the expression \code{numpy.max(image)}). The
 measurements shown were obtained on an Intel 64~bit system, running Ubuntu
-Linux. However, due to the normalization, measurements obtained on another
-system (Intel 32~bits running Mac OS) were qualitatively similar.
+Linux. Due to the normalization, measurements obtained on another system (Intel
+32~bits running Mac OS) were qualitatively similar.
 
 The comparison is against Pymorph~\citep{DougLotu:03}, which is a pure Python
 implementation of some of the same functions; scikits-image, which is a similar
@@ -395,7 +400,7 @@ possible to crash the interpreter if types do match the expected type (in the
 other libraries, including mahotas, all types are checked and an exception is
 generated which can be caught by user code). This is particularly relevant for
 interactive use as the user is often exploring and is willing to pay the speed
-cost of a few extra type checks and conversions to avoid a hard-crash.
+cost of a few extra type checks to avoid a hard-crash.
 
 Among the other libraries, mahotas is the fastest. Pymorph, even though it is
 implemented in Python only, intelligently uses arithmetic operations for
@@ -427,7 +432,7 @@ systems.
 
 Mahotas includes a complete automated suite of unit tests, which tests all
 functionality and include several regression tests. There are no known bugs in
-version~1.0. In fact, no releases have ever been performed with known bugs.
+version~1.0. In fact, no releases have every contained any known bugs.
 Naturally, bugs were, occasionally, discovered in released versions, but
 corrected before the next release.
 
@@ -513,9 +518,11 @@ slow for a direct Python implementation. However, all of the Python interface
 code is hand-written, as opposed to using automatic interface generators like
 Swig~\citep{Beazley2003599}. This is more work initially, but the end result is
 of much higher quality, especially when it comes to giving useful error
-messages (e.g., when a type mismatch occurs, an automatic system will often be
-forced to resort to a generic message as it does not have any knowledge of what
-the arguments mean besides their automatically inferred types).
+messages. When a type mismatch occurs, an automatic system will often be forced
+to resort to a generic message as it does not have any knowledge of what the
+arguments mean to the user. It will only know their automatically inferred
+types. A hand written system can also automatically convert arguments when
+meaningful and be more flexible without completely losing type checking.
 
 Mahotas has been available in the Python Package Index since April~2010 and has
 been downloaded over fifty thousand~times. This does not include any downloads
@@ -530,8 +537,8 @@ Classifier (SLIC) tool from Robert F.\ Murphy's
 Lab~\citep{springerlink:10.1007/978-0-387-45524-2_47} and the initial versions
 of mahotas were designed explicitly to support that functionality. The
 \textsc{surf} implementation is a port from the code from
-\textit{dlib},\footnote{Dlib's webpage is at \url{http://dlib.net}.} a very
-good \cpp{} library by Davis King. I also gleaned some insight into the
+\textit{dlib},\footnote{Dlib's webpage is at \url{http://dlib.net}.} an
+excellent \cpp{} library by Davis King. I also gleaned some insight into the
 implementation of these features from Christopher Evan's OpenSURF library and
 its documentation \citep{evans2009}.\footnote{OpenSURF is available at
 \url{http://www.chrisevansdev.com/computer-vision-opensurf.html}, where several
@@ -549,10 +556,10 @@ St\'efan van der Walt and Andreas M\"uller offered helpful comments on a draft
 version of this manuscript.
 
 \textbf{Funding}: I was supported in my work by the Funda\c c\~{a}o para a
-Ci\^encia e Tecnologia (grants SFRH/BD/37535/2007 and
-PTDC/SAU-GMG/115652/2008), by NIH grant GM078622 (to Robert F.\ Murphy), by a
-grant from the Scaife Foundation, by the HHMI Interfaces Initiative, and by a
-grant from the Siebel Scholars Foundation.
+Ci\^encia e Tecnologia (grant SFRH/BD/37535/2007 to himself and grant
+PTDC/SAU-GMG/115652/2009 to Musa Mhlanga), by NIH grant GM078622 (to Robert F.\
+Murphy), by a grant from the Scaife Foundation, by the HHMI Interfaces
+Initiative, and by a grant from the Siebel Scholars Foundation.
 
 \bibliography{references}
 \end{document}
