@@ -1,26 +1,28 @@
 import numpy as np
-import mahotas
+import mahotas as mh
 from mahotas.features import surf
-from os import path
-from pylab import *
-import milk
-
-f = mahotas.imread('luispedro.jpg', as_grey=True)
+from scipy.cluster import vq
+import mahotas.demos
+impath = mh.demos.image_path('luispedro.jpg')
+f = mh.imread(impath, as_grey=True)
 f = f.astype(np.uint8)
 spoints = surf.surf(f, 4, 6, 2)
 descrs = spoints[:,6:]
-
-values, _ = milk.kmeans(descrs, 5)
-colors = np.array([(255-52*i,25+52*i,37**i % 101) for i in xrange(5)])
-
-f2 = surf.show_surf(f, spoints[:64], values, colors)
-
-subplot(1,2,1)
-imshow(np.dstack([f,f,f]))
-xticks([])
-yticks([])
-subplot(1,2,2)
-imshow(f2)
-xticks([])
-yticks([])
-savefig('surf-tutorial.png')
+_,cids = vq.kmeans2(vq.whiten(descrs), 5)
+colors = np.array([
+    [ 255,  25,   1],
+    [203,  77,  37],
+    [151, 129,  56],
+    [ 99, 181,  52],
+    [ 47, 233,   5]])
+f2 = surf.show_surf(f, spoints[:64], cids, colors)
+from matplotlib import pyplot as plt
+plt.subplot(1,2,1)
+plt.imshow(np.dstack([f,f,f]))
+plt.xticks([])
+plt.yticks([])
+plt.subplot(1,2,2)
+plt.imshow(f2)
+plt.xticks([])
+plt.yticks([])
+plt.savefig('surf-tutorial.png')
