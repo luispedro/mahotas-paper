@@ -48,7 +48,7 @@ infrastructure developed in that language.
 Mahotas is released under a liberal open source license (MIT License) and is
 available from \url{http://github.com/luispedro/mahotas} and from the Python Package
 Index (\url{http://pypi.python.org/pypi/mahotas}). Tutorials and full API
-documentation is available online at \url{http://mahotas.readthedocs.org/}.
+documentation are available online at \url{http://mahotas.readthedocs.org/}.
 
 \textbf{Keywords:} computer vision, image processing.
 
@@ -119,8 +119,9 @@ transforms~\citep{felzenszwalb}.
 Numpy arrays contain data of a specific type, such \code{unsigned 8 bit
 integer} or floating point numbers. While natural colour images are typically
 8~bits, scientific data is often larger (12 and 16~bit formats are common).
-Processing can generate floating point images, for example, subtracting the
-mean value to every pixel; the mean will be a floating point number even if the
+Processing can generate floating point images. For example, a common
+normalization procedure is to subtract from each pixel location the overall
+pixel value mean; the result will be a floating point image even if the
 original image was integral. Mahotas works on all datatypes. This is performed
 without any extra memory copies. Mahotas is heavily optimised for both speed
 and memory usage (it can be used with very large arrays).
@@ -232,13 +233,10 @@ the right SURF detections are represented as rectangles of different colours.}
 \subsection{Implementation}
 
 Mahotas is mostly written in \cpp, but this is completely hidden from the user
-as there are hand-written Python wrappers for all functions. Automatically
-generated wrappers inevitably lead to worse error messages and are less
-flexible.
-
-The main reason that mahotas is implemented in \cpp{} (and not in C, which is
-the language of the Python interpreter) is to use templates. Almost \cpp{}
-functionality is split across 2~functions:
+as there are hand-written Python wrappers for all functions. The main reason
+that mahotas is implemented in \cpp{} (and not in C, which is the language of
+the Python interpreter) is to use templates. Almost all \cpp{} functionality is
+split across 2~functions:
 
 \begin{enumerate}
 \item A \code{py\_function} which uses the Python C~API to get arguments and
@@ -522,7 +520,7 @@ messages. When a type mismatch occurs, an automatic system will often be forced
 to resort to a generic message as it does not have any knowledge of what the
 arguments mean to the user. It will only know their automatically inferred
 types. A hand written system can also automatically convert arguments when
-meaningful and be more flexible without completely losing type checking.
+meaningful and be more flexible without completely foregoing type checking.
 
 Mahotas has been available in the Python Package Index since April~2010 and has
 been downloaded over fifty thousand~times. This does not include any downloads
